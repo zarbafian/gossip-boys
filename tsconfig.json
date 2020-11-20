@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "system",
+    "target": "ES2020",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "outDir": "./js-gen/",
+    "sourceMap": true,
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
