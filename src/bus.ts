@@ -66,19 +66,37 @@ class MessageBus {
 }
 
 class Message {
+    static nextId: number = 1;
+    
     id: string;
     value: string;
     sender: number;
-    static nextId: number = 1;
-    private constructor(id: string, value: string, sender: number) {
+    gossipers: number[];
+    
+    epidemic: boolean;
+    hops: number;
+
+    private constructor(id: string, value: string, sender: number, gossiper: number, broadcast: boolean) {
         this.id = id;
         this.value = value;
         this.sender = sender;
+        this.gossipers = [];
+        this.gossipers.push(gossiper);
+        this.epidemic = broadcast;
+        this.hops = 1;
     }
-    static new(data: string, from: number) {
+
+    clone(): Message {
+        let copy = new Message(this.id, this.value, this.sender, this.sender, this.epidemic);
+        copy.gossipers = this.gossipers.slice(0);
+        copy.hops = this.hops;
+        return copy;
+    }
+
+    static new(data: string, from: number, broadcast: boolean) {
         let messageId = Message.nextId.toString();
         Message.nextId++;
-        let message = new Message(messageId, data, from);
+        let message = new Message(messageId, data, from, from, broadcast);
         return message;
     }
 }

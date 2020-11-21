@@ -70,13 +70,32 @@ class Process implements MessageBusSubscriber {
         return false;
     }
 
+    broadcast(message: Message) {
+        if(message.epidemic) {
+            this.setStatus(ProcessStatus.Contaminated);
+        }
+        this.gossipedMessages[message.id] = message;
+        networkController.broadcast(this.id, message);
+    }
+    getHopCount(messageId: string): number {
+        if(messageId in this.gossipedMessages) {
+            return this.gossipedMessages[messageId].hops;
+        }
+        return -1;
+    }
+
     onMessage(message: Message): void {
-        //console.log(`process ${this.id} received message (${message.id}) from ${message.sender}`);
-        svgManager.setProcessStatus(this.id, ProcessStatus.Contaminated);
-        
-        if(!Object.keys(this.gossipedMessages).includes(message.id)) {
-            networkController.gossip(this.id, message);
-            this.gossipedMessages[message.id] = message;
+        //console.log(`process ${this.id} received message (id=${message.id}, sender=${message.sender}, gossiper=${message.gossipers[message.gossipers.length-1]}, hops=${message.hops}) from ${message.sender}`);
+
+        if(message.epidemic) {
+            this.setStatus(ProcessStatus.Contaminated);
+            if(!Object.keys(this.gossipedMessages).includes(message.id)) {
+                let copy = message.clone();
+                copy.gossipers.push(this.id);
+                copy.hops = copy.hops + 1;
+                networkController.gossip(this.id, copy);
+                this.gossipedMessages[copy.id] = copy;
+            }
         }
     }
 }

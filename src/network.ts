@@ -69,7 +69,7 @@ class NetworkController {
                 let link = new Link(id1, id2);
                 networkController.links.addLink(link);
                 let id = toLinkId(id1, id2);
-                //svgManager.createLink(id, networkController.processes[link.from].position, networkController.processes[link.to].position);
+                svgManager.createLink(id, networkController.processes[link.from].position, networkController.processes[link.to].position);
             }
             currentIndex++;
             attemps++;
@@ -94,13 +94,13 @@ class NetworkController {
         }
     }
 
-    // gossip a message to all peers except sender
+    // gossip a message to all peers except its sender and gossipers
     gossip(pid: number, message: Message) {
         let sender = this.processes[pid];
         if(sender != null) {
             let targets: Process[] = [];
             for(let pid2 of this.links.getProcessPeers(pid)) {
-                if(pid2 != message.sender) {
+                if(pid2 != message.sender && !message.gossipers.includes(pid2)) {
                     targets.push(this.processes[pid2]);
                 }
             }
@@ -109,7 +109,9 @@ class NetworkController {
     }
 
     async send(sender: Process, targets: Process[], message: Message) {
-        //svgManager.send(sender, targets, message);
+        /*
+        svgManager.send(sender, targets, message);
+        */
         await sleep(1000);
         for (let target of targets) {
             MessageBus.getInstance().notify(message, target.id.toString());

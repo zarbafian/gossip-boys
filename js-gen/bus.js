@@ -46,15 +46,25 @@ class MessageBus {
 }
 MessageBus.instance = null;
 class Message {
-    constructor(id, value, sender) {
+    constructor(id, value, sender, gossiper, broadcast) {
         this.id = id;
         this.value = value;
         this.sender = sender;
+        this.gossipers = [];
+        this.gossipers.push(gossiper);
+        this.epidemic = broadcast;
+        this.hops = 1;
     }
-    static new(data, from) {
+    clone() {
+        let copy = new Message(this.id, this.value, this.sender, this.sender, this.epidemic);
+        copy.gossipers = this.gossipers.slice(0);
+        copy.hops = this.hops;
+        return copy;
+    }
+    static new(data, from, broadcast) {
         let messageId = Message.nextId.toString();
         Message.nextId++;
-        let message = new Message(messageId, data, from);
+        let message = new Message(messageId, data, from, from, broadcast);
         return message;
     }
 }

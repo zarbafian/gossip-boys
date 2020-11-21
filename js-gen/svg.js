@@ -104,6 +104,7 @@ class SvgManager {
         line.setAttributeNS(null, "y2", endScreen.y.toString());
         line.setAttributeNS(null, "stroke", Color.LinkDefault);
         line.setAttributeNS(null, "stroke-width", "1px");
+        line.setAttributeNS(null, "stroke-opacity", "0.2");
         line.setAttributeNS(null, "class", "link");
         line.setAttributeNS(null, "opacity", "0.5");
         let svgElement = document.getElementById(this.id);
@@ -122,6 +123,20 @@ class SvgManager {
         circle.setAttributeNS(null, "opacity", "0.7");
         document.getElementById(this.id).appendChild(circle);
         return circle;
+    }
+    setSourceProcess(pid) {
+        let circle = document.createElementNS(SVG_NS, "circle");
+        circle.setAttributeNS(null, "id", pid + "source");
+        circle.setAttributeNS(null, "cx", "0");
+        circle.setAttributeNS(null, "cy", "0");
+        circle.setAttributeNS(null, "r", "10");
+        circle.setAttributeNS(null, "fill", Color.ProcessSource);
+        circle.setAttributeNS(null, "opacity", "0.2");
+        document.getElementById('g' + pid).appendChild(circle);
+    }
+    clearSourceProcess(pid) {
+        let group = document.getElementById('g' + pid);
+        group.removeChild(group.lastChild);
     }
     send(process, targets, message) {
         for (let target of targets) {

@@ -1,4 +1,4 @@
-var animationSpeed: number = 10;
+var animationSpeed: number = 3;
 
 function updateSlider(value: number) {
     animationSpeed = Math.round(100 / value);

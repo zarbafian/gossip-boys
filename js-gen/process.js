@@ -48,11 +48,29 @@ class Process {
         }
         return false;
     }
+    broadcast(message) {
+        if (message.epidemic) {
+            this.setStatus(ProcessStatus.Contaminated);
+        }
+        this.gossipedMessages[message.id] = message;
+        networkController.broadcast(this.id, message);
+    }
+    getHopCount(messageId) {
+        if (messageId in this.gossipedMessages) {
+            return this.gossipedMessages[messageId].hops;
+        }
+        return -1;
+    }
     onMessage(message) {
-        svgManager.setProcessStatus(this.id, ProcessStatus.Contaminated);
-        if (!Object.keys(this.gossipedMessages).includes(message.id)) {
-            networkController.gossip(this.id, message);
-            this.gossipedMessages[message.id] = message;
+        if (message.epidemic) {
+            this.setStatus(ProcessStatus.Contaminated);
+            if (!Object.keys(this.gossipedMessages).includes(message.id)) {
+                let copy = message.clone();
+                copy.gossipers.push(this.id);
+                copy.hops = copy.hops + 1;
+                networkController.gossip(this.id, copy);
+                this.gossipedMessages[copy.id] = copy;
+            }
         }
     }
 }

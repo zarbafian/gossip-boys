@@ -45,6 +45,7 @@ class NetworkController {
                 let link = new Link(id1, id2);
                 networkController.links.addLink(link);
                 let id = toLinkId(id1, id2);
+                svgManager.createLink(id, networkController.processes[link.from].position, networkController.processes[link.to].position);
             }
             currentIndex++;
             attemps++;
@@ -70,7 +71,7 @@ class NetworkController {
         if (sender != null) {
             let targets = [];
             for (let pid2 of this.links.getProcessPeers(pid)) {
-                if (pid2 != message.sender) {
+                if (pid2 != message.sender && !message.gossipers.includes(pid2)) {
                     targets.push(this.processes[pid2]);
                 }
             }
