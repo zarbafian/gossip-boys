@@ -1,4 +1,4 @@
-var animationSpeed = 2;
+var animationSpeed = 10;
 function updateSlider(value) {
     animationSpeed = Math.round(100 / value);
     let span = this.document.getElementById("speedLabel");

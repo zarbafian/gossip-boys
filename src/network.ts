@@ -32,7 +32,7 @@ class NetworkController {
 
                 let proba = Math.random();
                 if(proba < creationProbability) {
-                    let process = new Process(nextId, new Point(px, py), ProcessStatus.Offline, 6);
+                    let process = new Process(nextId, new Point(px, py), ProcessStatus.Offline, 4);
                     nextId++;
                     this.processes[process.id] = process;
                     svgManager.createProcess(process);
@@ -44,7 +44,7 @@ class NetworkController {
         console.log(`processes length is ${Object.keys(this.processes).length}`);
     }
 
-    async startProcess(pid: number) {
+    startProcess(pid: number) {
         //this.processes[pid].start();
         //svgManager.setProcessStatus(pid, ProcessStatus.Starting);
         
@@ -52,8 +52,6 @@ class NetworkController {
 
         let processPeers = this.getRandomPeers(pid);
         this.processes[pid].setPeers(processPeers);
-
-        await sleep(100);
         
         this.processes[pid].ready();
         svgManager.setProcessStatus(pid, ProcessStatus.Online);
@@ -84,8 +82,29 @@ class NetworkController {
             for(let pid2 of this.links.getProcessPeers(pid)) {
                 targets.push(this.processes[pid2]);
             }
-            targets.push(this.processes[pid]);
-            svgManager.send(sender, targets, message);
+            this.send(sender, targets, message);
+        }
+    }
+
+    // gossip a message to all peers except sender
+    gossip(pid: number, message: Message) {
+        let sender = this.processes[pid];
+        if(sender != null) {
+            let targets: Process[] = [];
+            for(let pid2 of this.links.getProcessPeers(pid)) {
+                if(pid2 != message.sender) {
+                    targets.push(this.processes[pid2]);
+                }
+            }
+            this.send(sender, targets, message);
+        }
+    }
+
+    async send(sender: Process, targets: Process[], message: Message) {
+        //svgManager.send(sender, targets, message);
+        await sleep(200);
+        for (let target of targets) {
+            MessageBus.getInstance().notify(message, target.id.toString());
         }
     }
 

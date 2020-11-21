@@ -16,6 +16,7 @@ enum Color {
     ProcessOffline = "#666666",
     ProcessStarting = "#dd9966",
     ProcessOnline = "#22ff22",
+    ProcessSource = "#ff2222",
     ProcessContaminated = "#2222ff",
     Message = "#4444ff",
     LinkDefault = "#000000",

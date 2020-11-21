@@ -3,7 +3,8 @@ var ProcessStatus;
     ProcessStatus[ProcessStatus["Offline"] = 0] = "Offline";
     ProcessStatus[ProcessStatus["Starting"] = 1] = "Starting";
     ProcessStatus[ProcessStatus["Online"] = 2] = "Online";
-    ProcessStatus[ProcessStatus["Contanimated"] = 3] = "Contanimated";
+    ProcessStatus[ProcessStatus["Source"] = 3] = "Source";
+    ProcessStatus[ProcessStatus["Contaminated"] = 4] = "Contaminated";
 })(ProcessStatus || (ProcessStatus = {}));
 class Process {
     constructor(id, position, status, peerCount) {
@@ -12,7 +13,7 @@ class Process {
         this.status = status;
         this.peerCount = peerCount;
         this.peers = [];
-        this.gossipedMessages = [];
+        this.gossipedMessages = {};
         this.topics = ['broadcast'];
         this.topics.push(this.id.toString());
     }
@@ -44,10 +45,10 @@ class Process {
         this.status = ProcessStatus.Online;
     }
     onMessage(message) {
-        svgManager.setProcessStatus(this.id, ProcessStatus.Contanimated);
-        if (!this.gossipedMessages.includes(message.id)) {
-            networkController.broadcast(this.id, message);
-            this.gossipedMessages.push(message.id);
+        svgManager.setProcessStatus(this.id, ProcessStatus.Contaminated);
+        if (!Object.keys(this.gossipedMessages).includes(message.id)) {
+            networkController.gossip(this.id, message);
+            this.gossipedMessages[message.id] = message;
         }
     }
 }

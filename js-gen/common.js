@@ -16,6 +16,7 @@ var Color;
     Color["ProcessOffline"] = "#666666";
     Color["ProcessStarting"] = "#dd9966";
     Color["ProcessOnline"] = "#22ff22";
+    Color["ProcessSource"] = "#ff2222";
     Color["ProcessContaminated"] = "#2222ff";
     Color["Message"] = "#4444ff";
     Color["LinkDefault"] = "#000000";

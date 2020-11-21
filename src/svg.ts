@@ -239,7 +239,10 @@ class SvgManager {
             case ProcessStatus.Online:
                 color = Color.ProcessOnline;
                 break;
-            case ProcessStatus.Contanimated:
+            case ProcessStatus.Source:
+                color = Color.ProcessSource;
+                break;
+            case ProcessStatus.Contaminated:
                 color = Color.ProcessContaminated;
                 break;
             case ProcessStatus.Offline:

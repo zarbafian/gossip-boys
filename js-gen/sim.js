@@ -4,7 +4,7 @@ class Simulation {
     }
     async start() {
         networkController.generate();
-        let primaryProcessCount = 20;
+        let primaryProcessCount = 500;
         let processKeys = Object.keys(networkController.processes);
         let selectedProcessesIndex = getRandomCombination(processKeys.length, primaryProcessCount);
         let primaryProcess = [];
@@ -21,9 +21,10 @@ class Simulation {
         while (this.running) {
             let onlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Online);
             let selectedProcess = onlineProcesses[getRandomInt(onlineProcesses.length)];
-            svgManager.setProcessStatus(selectedProcess, ProcessStatus.Contanimated);
+            console.log(`broadcast from process: ${selectedProcess}`);
+            svgManager.setProcessStatus(selectedProcess, ProcessStatus.Source);
             networkController.broadcast(selectedProcess, Message.new('test', selectedProcess));
-            await sleep(10000);
+            await sleep(5000);
             onlineProcesses.forEach(pid => svgManager.setProcessStatus(pid, ProcessStatus.Online));
         }
     }

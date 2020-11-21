@@ -17,7 +17,7 @@ class NetworkController {
                 let py = y * areaSize + getRandomInt(areaSize - 8) + 4 - svgManager.zero.y;
                 let proba = Math.random();
                 if (proba < creationProbability) {
-                    let process = new Process(nextId, new Point(px, py), ProcessStatus.Offline, 6);
+                    let process = new Process(nextId, new Point(px, py), ProcessStatus.Offline, 4);
                     nextId++;
                     this.processes[process.id] = process;
                     svgManager.createProcess(process);
@@ -27,11 +27,10 @@ class NetworkController {
         console.log(`created ${nextId - 1} processes`);
         console.log(`processes length is ${Object.keys(this.processes).length}`);
     }
-    async startProcess(pid) {
+    startProcess(pid) {
         this.processes[pid].init();
         let processPeers = this.getRandomPeers(pid);
         this.processes[pid].setPeers(processPeers);
-        await sleep(100);
         this.processes[pid].ready();
         svgManager.setProcessStatus(pid, ProcessStatus.Online);
     }
@@ -55,8 +54,25 @@ class NetworkController {
             for (let pid2 of this.links.getProcessPeers(pid)) {
                 targets.push(this.processes[pid2]);
             }
-            targets.push(this.processes[pid]);
-            svgManager.send(sender, targets, message);
+            this.send(sender, targets, message);
+        }
+    }
+    gossip(pid, message) {
+        let sender = this.processes[pid];
+        if (sender != null) {
+            let targets = [];
+            for (let pid2 of this.links.getProcessPeers(pid)) {
+                if (pid2 != message.sender) {
+                    targets.push(this.processes[pid2]);
+                }
+            }
+            this.send(sender, targets, message);
+        }
+    }
+    async send(sender, targets, message) {
+        await sleep(200);
+        for (let target of targets) {
+            MessageBus.getInstance().notify(message, target.id.toString());
         }
     }
     getProcessesByStatus(status) {

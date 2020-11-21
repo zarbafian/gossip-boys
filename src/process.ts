@@ -2,7 +2,8 @@ enum ProcessStatus {
     Offline,
     Starting,
     Online,
-    Contanimated,
+    Source,
+    Contaminated,
 }
 
 class Process implements MessageBusSubscriber {
@@ -15,7 +16,7 @@ class Process implements MessageBusSubscriber {
     peerCount: number;
     peers: number[];
 
-    gossipedMessages: string[];
+    gossipedMessages: { [mid: string]: Message };
 
     constructor(id: number, position: Point, status: ProcessStatus, peerCount: number) {
         this.id = id;
@@ -24,7 +25,7 @@ class Process implements MessageBusSubscriber {
         this.peerCount = peerCount;
         this.peers = [];
 
-        this.gossipedMessages = [];
+        this.gossipedMessages = {};
 
         this.topics = ['broadcast'];
         this.topics.push(this.id.toString());
@@ -64,11 +65,11 @@ class Process implements MessageBusSubscriber {
 
     onMessage(message: Message): void {
         //console.log(`process ${this.id} received message (${message.id}) from ${message.sender}`);
-        svgManager.setProcessStatus(this.id, ProcessStatus.Contanimated);
+        svgManager.setProcessStatus(this.id, ProcessStatus.Contaminated);
         
-        if(!this.gossipedMessages.includes(message.id)) {
-            networkController.broadcast(this.id, message);
-            this.gossipedMessages.push(message.id);
+        if(!Object.keys(this.gossipedMessages).includes(message.id)) {
+            networkController.gossip(this.id, message);
+            this.gossipedMessages[message.id] = message;
         }
     }
 }
