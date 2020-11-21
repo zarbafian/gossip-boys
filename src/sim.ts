@@ -1,10 +1,10 @@
-const OUTGOING_PEERS = 12;
-const INCOMING_PEERS = 8;
+const OUTGOING_PEERS = 4;
+const INCOMING_PEERS = 2;
 
 class Simulation {
 
     running: boolean = false;
-    primaryProcessCount:number = 1500;
+    primaryProcessCount:number = 20;
 
     constructor() {
         // generate network of all potential processes
@@ -28,10 +28,15 @@ class Simulation {
         }
 
         // main event loop
-        //while(this.running) {
+        while(this.running) {
             // retrieve online processes
             let onlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Online, false);
             let totalCount = onlineProcesses.length;
+
+            // update outgoing connections
+            for(let pid of onlineProcesses) {
+                networkController.createOutgoingConnections(pid);
+            }
 
             // pick a random process
             let selectedProcess = onlineProcesses[getRandomInt(onlineProcesses.length)];
@@ -64,10 +69,24 @@ class Simulation {
             console.log(`Everyone up-to-date: minHops=${minHops}, maxHops=${maxHops}`);
             
             await sleep(3000);
+            
             svgManager.clearSourceProcess(selectedProcess);
-            onlineProcesses.forEach(pid => svgManager.setProcessStatus(pid, ProcessStatus.Online));
-            //svgManager.setProcessStatus(selectedProcess, ProcessStatus.Online);
-        //}
+            onlineProcesses.forEach(pid => networkController.processes[pid].setStatus(ProcessStatus.Online));
+
+            // add new processes
+            let offlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Offline, true);
+            for(let i=0; i < 4; i++) {
+                networkController.startProcess(offlineProcesses[i]);
+            }
+        }
+
+        await sleep(3000);
+        
+        // cleanup
+        for(let pid of primaryProcess) {
+            networkController.stopProcess(pid);
+        }
+        networkController.primaryProcesses = [];
 
         console.log('Simulation stopped');
     }

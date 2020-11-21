@@ -45,11 +45,35 @@ class Process implements MessageBusSubscriber {
         for(let topic of this.topics) {
             MessageBus.getInstance().unsubscribe(this, topic);
         }
+        this.setStatus(ProcessStatus.Offline);
+        this.gossipedMessages = {};
+        for(let pid of this.outgoingPeers) {
+            this.requestPeerDisconnection(pid);
+        }
+        for(let pid of this.incomingPeers) {
+            this.requestPeerDisconnection(pid);
+        }
+        networkController.links.removeByProcess(this.id);
+        this.outgoingPeers = [];
+        this.incomingPeers = [];
     }
 
     setStatus(status: ProcessStatus) {
         this.status = status;
         svgManager.setProcessStatus(this.id, this.status);
+    }
+
+    disconnectFromPeer(pid: number) {
+        if(this.outgoingPeers.indexOf(pid) !== -1) {
+            this.outgoingPeers.splice(this.outgoingPeers.indexOf(pid), 1);
+        }
+        if(this.incomingPeers.indexOf(pid) !== -1) {
+            this.incomingPeers.splice(this.incomingPeers.indexOf(pid), 1);
+        }
+    }
+
+    onPeerDisconnectionRequest(pid: number) {
+        this.disconnectFromPeer(pid);
     }
 
     async onPeerConnectionRequest(pid: number): Promise<boolean> {
@@ -59,6 +83,13 @@ class Process implements MessageBusSubscriber {
         this.incomingPeers.push(pid);
         //await sleep(1000);
         return true;
+    }
+
+    requestPeerDisconnection(pid: number) {
+        // disconnect from remote side
+        networkController.processes[pid].onPeerDisconnectionRequest(this.id);
+        // disconnect from my side
+        this.disconnectFromPeer(pid);
     }
 
     async requestPeerConnection(pid: number): Promise<boolean> {

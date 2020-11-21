@@ -32,6 +32,10 @@ class NetworkController {
     }
     async startProcess(pid) {
         this.processes[pid].init();
+        this.createOutgoingConnections(pid);
+        this.processes[pid].setStatus(ProcessStatus.Online);
+    }
+    async createOutgoingConnections(pid) {
         let onlineProcesses = this.getProcessesByStatus(ProcessStatus.Online, true);
         let currentIndex = 0;
         let maxConnectionAttempts = this.processes[pid].maxOutgoingPeers * 2;
@@ -53,8 +57,9 @@ class NetworkController {
                 break;
             }
         }
-        this.processes[pid].status = ProcessStatus.Online;
-        svgManager.setProcessStatus(pid, ProcessStatus.Online);
+    }
+    stopProcess(pid) {
+        this.processes[pid].drop();
     }
     broadcast(pid, message) {
         let sender = this.processes[pid];

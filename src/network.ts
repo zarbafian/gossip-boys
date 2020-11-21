@@ -55,7 +55,14 @@ class NetworkController {
         // subscribe to topics
         this.processes[pid].init();
 
-        // connect to peers
+        // connect to other peers
+        this.createOutgoingConnections(pid);
+
+        // update status
+        this.processes[pid].setStatus(ProcessStatus.Online);
+    }
+
+    async createOutgoingConnections(pid: number) {
         let onlineProcesses = this.getProcessesByStatus(ProcessStatus.Online, true);
         let currentIndex = 0;
         let maxConnectionAttempts = this.processes[pid].maxOutgoingPeers * 2;
@@ -77,9 +84,10 @@ class NetworkController {
                 break;
             }
         }
-        
-        this.processes[pid].status = ProcessStatus.Online;
-        svgManager.setProcessStatus(pid, ProcessStatus.Online);
+    }
+
+    stopProcess(pid: number) {
+        this.processes[pid].drop();
     }
 
     // broadcast a message to all peers

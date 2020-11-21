@@ -1,9 +1,9 @@
-const OUTGOING_PEERS = 12;
-const INCOMING_PEERS = 8;
+const OUTGOING_PEERS = 4;
+const INCOMING_PEERS = 2;
 class Simulation {
     constructor() {
         this.running = false;
-        this.primaryProcessCount = 1500;
+        this.primaryProcessCount = 20;
         networkController.generate();
     }
     async start() {
@@ -16,34 +16,48 @@ class Simulation {
         for (let pid of primaryProcess) {
             await networkController.startProcess(pid);
         }
-        let onlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Online, false);
-        let totalCount = onlineProcesses.length;
-        let selectedProcess = onlineProcesses[getRandomInt(onlineProcesses.length)];
-        console.log(`broadcast from process: ${selectedProcess}`);
-        svgManager.setSourceProcess(selectedProcess);
-        let message = Message.new('test', selectedProcess, true);
-        networkController.processes[selectedProcess].broadcast(message);
-        let contaminatedProcesses = networkController.getProcessesByStatus(ProcessStatus.Contaminated, false);
-        while (contaminatedProcesses.length < totalCount) {
-            console.log('will wait for full propagation');
-            await sleep(1000);
-            contaminatedProcesses = networkController.getProcessesByStatus(ProcessStatus.Contaminated, false);
+        while (this.running) {
+            let onlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Online, false);
+            let totalCount = onlineProcesses.length;
+            for (let pid of onlineProcesses) {
+                networkController.createOutgoingConnections(pid);
+            }
+            let selectedProcess = onlineProcesses[getRandomInt(onlineProcesses.length)];
+            console.log(`broadcast from process: ${selectedProcess}`);
+            svgManager.setSourceProcess(selectedProcess);
+            let message = Message.new('test', selectedProcess, true);
+            networkController.processes[selectedProcess].broadcast(message);
+            let contaminatedProcesses = networkController.getProcessesByStatus(ProcessStatus.Contaminated, false);
+            while (contaminatedProcesses.length < totalCount) {
+                console.log('will wait for full propagation');
+                await sleep(1000);
+                contaminatedProcesses = networkController.getProcessesByStatus(ProcessStatus.Contaminated, false);
+            }
+            let maxHops = 1;
+            let minHops = 1;
+            onlineProcesses.forEach(pid => {
+                let hops = networkController.processes[pid].getHopCount(message.id);
+                if (hops > maxHops) {
+                    maxHops = hops;
+                }
+                if (hops < minHops) {
+                    minHops = hops;
+                }
+            });
+            console.log(`Everyone up-to-date: minHops=${minHops}, maxHops=${maxHops}`);
+            await sleep(3000);
+            svgManager.clearSourceProcess(selectedProcess);
+            onlineProcesses.forEach(pid => networkController.processes[pid].setStatus(ProcessStatus.Online));
+            let offlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Offline, true);
+            for (let i = 0; i < 4; i++) {
+                networkController.startProcess(offlineProcesses[i]);
+            }
         }
-        let maxHops = 1;
-        let minHops = 1;
-        onlineProcesses.forEach(pid => {
-            let hops = networkController.processes[pid].getHopCount(message.id);
-            if (hops > maxHops) {
-                maxHops = hops;
-            }
-            if (hops < minHops) {
-                minHops = hops;
-            }
-        });
-        console.log(`Everyone up-to-date: minHops=${minHops}, maxHops=${maxHops}`);
         await sleep(3000);
-        svgManager.clearSourceProcess(selectedProcess);
-        onlineProcesses.forEach(pid => svgManager.setProcessStatus(pid, ProcessStatus.Online));
+        for (let pid of primaryProcess) {
+            networkController.stopProcess(pid);
+        }
+        networkController.primaryProcesses = [];
         console.log('Simulation stopped');
     }
 }
