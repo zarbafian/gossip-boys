@@ -13,17 +13,21 @@ class Process implements MessageBusSubscriber {
 
     topics: string[];
 
-    peerCount: number;
-    peers: number[];
+    maxOutgoingPeers: number;
+    maxIncomingPeers: number;
+    outgoingPeers: number[];
+    incomingPeers: number[];
 
     gossipedMessages: { [mid: string]: Message };
 
-    constructor(id: number, position: Point, status: ProcessStatus, peerCount: number) {
+    constructor(id: number, position: Point, status: ProcessStatus) {
         this.id = id;
         this.position = position;
         this.status = status;
-        this.peerCount = peerCount;
-        this.peers = [];
+        this.maxOutgoingPeers = OUTGOING_PEERS;
+        this.maxIncomingPeers = INCOMING_PEERS;
+        this.outgoingPeers = [];
+        this.incomingPeers = [];
 
         this.gossipedMessages = {};
 
@@ -43,24 +47,27 @@ class Process implements MessageBusSubscriber {
         }
     }
 
-    setPeers(peers: number[]) {
-        this.peers = peers;
-        // create links
-        for(let peerId of this.peers) {
-            let id1 = this.id;
-            let id2 = peerId;
-            let link = new Link(id1, id2);
-            networkController.links.addLink(link);
-            let id = toLinkId(id1, id2);
-            svgManager.createLink(id, networkController.processes[link.from].position, networkController.processes[link.to].position);
-        }
+    setStatus(status: ProcessStatus) {
+        this.status = status;
+        svgManager.setProcessStatus(this.id, this.status);
     }
 
-    start() {
-        this.status = ProcessStatus.Starting;
+    async onPeerConnectionRequest(pid: number): Promise<boolean> {
+        if(this.incomingPeers.length >= this.maxIncomingPeers) {
+            return false;
+        }
+        this.incomingPeers.push(pid);
+        //await sleep(1000);
+        return true;
     }
-    ready() {
-        this.status = ProcessStatus.Online;
+
+    async requestPeerConnection(pid: number): Promise<boolean> {
+        let success: boolean = await networkController.processes[pid].onPeerConnectionRequest(this.id);
+        if(success) {
+            this.outgoingPeers.push(pid);
+            return true;
+        }
+        return false;
     }
 
     onMessage(message: Message): void {

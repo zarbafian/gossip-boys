@@ -3,7 +3,8 @@
     <head>
         <meta charset="UTF-8">
         <title>Gossip Boys</title>
-        <script src="js-gen/common.js"></script>
+        <script src="js-gen/util/common.js"></script>
+        <script src="js-gen/util/rand.js"></script>
         <script src="js-gen/animation.js"></script>
         <script src="js-gen/dns.js"></script>
         <script src="js-gen/svg.js"></script>
@@ -18,6 +19,11 @@
         <link rel="stylesheet" href="styles.css">
     </head>
     <body onload="init()">
+
+        <!-- start/stop simulation -->
+        <div style="position: absolute; top: 20px; right: 20px;">
+            <button id="startStopButton" value="START" onclick="startStop()">START</button>
+        </div>
 
         <!-- command line input -->
         <div style="position: absolute; bottom: 20px; left: 20px; visibility: hidden;">

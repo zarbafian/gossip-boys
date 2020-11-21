@@ -19,7 +19,6 @@ class MessageBus {
             }
         }
         this.subscribers[topic].push(subscriber);
-        console.log(`${subscriber.id} scubscribed to ${topic}`);
         return true;
     }
     notify(message, topic) {

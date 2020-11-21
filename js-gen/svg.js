@@ -86,8 +86,9 @@ class SvgManager {
         circle.setAttributeNS(null, "cy", "0");
         circle.setAttributeNS(null, "r", "3");
         circle.setAttributeNS(null, "fill", Color.ProcessOffline);
-        circle.setAttributeNS(null, "stroke", "black");
         circle.setAttributeNS(null, "opacity", "1");
+        circle.setAttributeNS(null, "stroke", "black");
+        circle.setAttributeNS(null, "stroke-opacity", "0.1");
         circle.setAttributeNS(null, "class", "draggable process");
         group.appendChild(circle);
         document.getElementById(this.id).appendChild(group);

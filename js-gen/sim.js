@@ -1,32 +1,31 @@
+const OUTGOING_PEERS = 6;
+const INCOMING_PEERS = 4;
 class Simulation {
     constructor() {
-        this.running = true;
+        this.running = false;
+        this.primaryProcessCount = 1000;
+        networkController.generate();
     }
     async start() {
-        networkController.generate();
-        let primaryProcessCount = 500;
-        let processKeys = Object.keys(networkController.processes);
-        let selectedProcessesIndex = getRandomCombination(processKeys.length, primaryProcessCount);
-        let primaryProcess = [];
-        for (let idx of selectedProcessesIndex) {
-            primaryProcess.push(parseInt(processKeys[idx]));
-        }
+        console.log('Simulation started');
+        let primaryProcess = getRandomCombination(networkController.getProcessKeys(), this.primaryProcessCount);
         networkController.primaryProcesses = primaryProcess.slice(0);
         for (let pid of primaryProcess) {
-            networkController.processes[pid].ready();
+            networkController.processes[pid].setStatus(ProcessStatus.Online);
         }
         for (let pid of primaryProcess) {
-            networkController.startProcess(pid);
+            await networkController.startProcess(pid);
         }
         while (this.running) {
-            let onlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Online);
+            let onlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Online, false);
             let selectedProcess = onlineProcesses[getRandomInt(onlineProcesses.length)];
             console.log(`broadcast from process: ${selectedProcess}`);
             svgManager.setProcessStatus(selectedProcess, ProcessStatus.Source);
             networkController.broadcast(selectedProcess, Message.new('test', selectedProcess));
-            await sleep(5000);
+            await sleep(20000);
             onlineProcesses.forEach(pid => svgManager.setProcessStatus(pid, ProcessStatus.Online));
         }
+        console.log('Simulation stopped');
     }
 }
 //# sourceMappingURL=sim.js.map

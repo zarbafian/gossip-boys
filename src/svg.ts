@@ -165,9 +165,10 @@ class SvgManager {
         circle.setAttributeNS(null, "r", "3");
         //circle.setAttributeNS(null, "r", PROCESS_SIZE.toString());
         circle.setAttributeNS(null, "fill", Color.ProcessOffline);
+        circle.setAttributeNS(null, "opacity", "1");
         //circle.setAttributeNS(null, "fill", process.byzantine ? Color.ByzantineProcess : Color.CorrectProcess);
         circle.setAttributeNS(null, "stroke", "black");
-        circle.setAttributeNS(null, "opacity", "1");
+        circle.setAttributeNS(null, "stroke-opacity", "0.1");
         circle.setAttributeNS(null, "class", "draggable process");
 
         group.appendChild(circle);

@@ -35,7 +35,7 @@ class MessageBus {
         }
         // subscribe
         this.subscribers[topic].push(subscriber);
-        console.log(`${subscriber.id} scubscribed to ${topic}`);
+        //console.log(`${subscriber.id} scubscribed to ${topic}`);
         return true;
     }
 

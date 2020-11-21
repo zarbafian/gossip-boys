@@ -13,10 +13,10 @@ var MouseButton;
 })(MouseButton || (MouseButton = {}));
 var Color;
 (function (Color) {
-    Color["ProcessOffline"] = "#666666";
+    Color["ProcessOffline"] = "#FFFFFF";
     Color["ProcessStarting"] = "#dd9966";
-    Color["ProcessOnline"] = "#22ff22";
-    Color["ProcessSource"] = "#ff2222";
+    Color["ProcessOnline"] = "#44ff44";
+    Color["ProcessSource"] = "#ff4444";
     Color["ProcessContaminated"] = "#2222ff";
     Color["Message"] = "#4444ff";
     Color["LinkDefault"] = "#000000";
@@ -42,30 +42,5 @@ class Point {
 }
 function distance(p1, p2) {
     return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
-}
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-}
-function getRandomCombination(n, k) {
-    let startIndex = 0;
-    let delta = Math.round(n / k) * 2;
-    let selectedIndices = [];
-    while (selectedIndices.length < k) {
-        let nextIndex = startIndex + getRandomInt(delta);
-        if (nextIndex >= n) {
-            nextIndex -= n;
-        }
-        startIndex = nextIndex + 1;
-        if (startIndex >= n) {
-            startIndex -= n;
-        }
-        if (selectedIndices.includes(nextIndex)) {
-            continue;
-        }
-        else {
-            selectedIndices.push(nextIndex);
-        }
-    }
-    return selectedIndices;
 }
 //# sourceMappingURL=common.js.map

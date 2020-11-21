@@ -30,7 +30,6 @@ class Links {
     addLink(link) {
         for (let tmpLink of this.linksArray) {
             if ((link.from == tmpLink.from && link.to == tmpLink.to) || (link.from == tmpLink.to && link.to == tmpLink.from)) {
-                console.log("link already exists: " + tmpLink.from + " -> " + tmpLink.to);
                 return false;
             }
         }
