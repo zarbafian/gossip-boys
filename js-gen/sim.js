@@ -28,7 +28,7 @@ class Simulation {
             await sleep(3000);
             onlineProcesses.forEach(pid => networkController.processes[pid].setStatus(ProcessStatus.Online));
             let offlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Offline, true);
-            if (offlineProcesses.length <= simulation.joiningProcessCount) {
+            if (offlineProcesses.length >= simulation.joiningProcessCount) {
                 for (let i = 0; i < simulation.joiningProcessCount; i++) {
                     networkController.startProcess(offlineProcesses[i]);
                 }

@@ -48,7 +48,7 @@ class Simulation {
 
             // add new processes
             let offlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Offline, true);
-            if(offlineProcesses.length <= simulation.joiningProcessCount) {
+            if(offlineProcesses.length >= simulation.joiningProcessCount) {
                 for (let i = 0; i < simulation.joiningProcessCount; i++) {
                     networkController.startProcess(offlineProcesses[i]);
                 }
