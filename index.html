@@ -27,15 +27,25 @@
         
         <!-- simulation settings -->
         <div class="settings">
-            <input id="primary" type="text" value="20">Primary count<br/>
+            <input id="initialProcesses" type="text">Initial count<br/>
+            <input id="joiningProcesses" type="text">Increment rate<br/>
+            <input id="outgoingPeers" type="text">Outgoing peers<br/>
+            <input id="incomingPeers" type="text">Incoming peers<br/>
             <input id="displayLinks" type="checkbox">Display links<br/>
             <input id="displayMessages" type="checkbox">Display messages<br/>
             <br/>
             <span id="speedLabel" style="vertical-align: middle;">10</span>
-            <input id="simulationSpeed" type="range" min="1" max="100" value="60" onchange="updateSlider(this.value)" style="vertical-align: top;">Speed<br/>
+            <input id="simulationSpeed" type="range" min="1" max="100" value="60" style="vertical-align: top;">Speed<br/>
             
             <br/>
             <button id="startStopButton" value="START" onclick="startStop()">START</button>
+            <br/>
+            <br/>
+            Outputs
+            <br/>
+            <span id="processCount">0</span>
+            <br/>
+            <span id="messageCount">0</span>
         </div>
 
         <!-- start/stop simulation

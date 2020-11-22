@@ -20,18 +20,20 @@ class Process implements MessageBusSubscriber {
 
     gossipedMessages: { [mid: string]: Message };
     sentMessagesCount: { [mid: string]: number };
+    gossipedPeers: { [mid: string]: number[] };
 
     constructor(id: number, position: Point, status: ProcessStatus) {
         this.id = id;
         this.position = position;
         this.status = status;
-        this.maxOutgoingPeers = OUTGOING_PEERS;
-        this.maxIncomingPeers = INCOMING_PEERS;
+        this.maxOutgoingPeers = simulation.outgoingPeers;
+        this.maxIncomingPeers = simulation.incomingPeers;
         this.outgoingPeers = [];
         this.incomingPeers = [];
 
         this.gossipedMessages = {};
         this.sentMessagesCount = {};
+        this.gossipedPeers = {};
 
         this.topics = ['broadcast'];
         this.topics.push(this.id.toString());
@@ -118,10 +120,10 @@ class Process implements MessageBusSubscriber {
         return -1;
     }
     getMessageCount(messageId: string) {
-        if(messageId in this.gossipedMessages) {
-            return this.gossipedMessages[messageId].hops;
+        if(messageId in this.sentMessagesCount) {
+            return this.sentMessagesCount[messageId];
         }
-        return -1;
+        return 0;
     }
 
     onMessage(message: Message): void {
@@ -129,6 +131,7 @@ class Process implements MessageBusSubscriber {
 
         if(message.epidemic) {
             this.setStatus(ProcessStatus.Infected);
+            /*
             if(!Object.keys(this.gossipedMessages).includes(message.id)) {
                 let copy = message.clone();
                 copy.gossipers.push(this.id);
@@ -136,6 +139,29 @@ class Process implements MessageBusSubscriber {
                 networkController.gossip(this.id, copy);
                 this.gossipedMessages[copy.id] = copy;
             }
+            */
         }
+    }
+
+    randomGossip(message: Message) {
+        this.setStatus(ProcessStatus.Infected);
+        let onlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Online, true);
+        for(let pid of onlineProcesses) {
+            if(!this.gossipedPeers[message.id]) {
+                networkController.send(networkController.processes[this.id], [networkController.processes[pid]], message);
+                this.gossipedPeers[message.id] = [pid];
+                break;
+            }
+            else if(!this.gossipedPeers[message.id].includes(pid)){
+                networkController.send(networkController.processes[this.id], [networkController.processes[pid]], message);
+                this.gossipedPeers[message.id].push(pid);
+                break;
+            }
+            else {
+                continue;
+            }
+        }
+        this.gossipedMessages[message.id] = message;
+        this.sentMessagesCount[message.id] = (this.sentMessagesCount[message.id] || 0) + 1;
     }
 }

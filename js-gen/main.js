@@ -17,6 +17,8 @@ function init() {
     svgManager.init();
     networkController = new NetworkController();
     simulation = new Simulation();
+    simulation.init();
+    loadSettings();
     setupContols();
 }
 function startStop() {
@@ -31,35 +33,52 @@ function startStop() {
     }
 }
 function setupContols() {
-    document.getElementById(Html.primary).addEventListener("keyup", (event) => {
-        let rawValue = document.getElementById(Html.primary).value;
-        let parsedValue = parseInt(rawValue);
-        if (!isNaN(parsedValue)) {
-            simulation.primaryProcessCount = parsedValue;
-            console.log(`updated count of initial processes to ${simulation.primaryProcessCount}`);
-        }
-    });
+    setupTextInput(Html.initialProcesses, () => simulation.initialProcessCount.toString(), (value) => simulation.initialProcessCount = value);
+    setupTextInput(Html.joiningProcesses, () => simulation.joiningProcessCount.toString(), (value) => simulation.joiningProcessCount = value);
+    setupTextInput(Html.outgoingPeers, () => simulation.outgoingPeers.toString(), (value) => simulation.outgoingPeers = value);
+    setupTextInput(Html.incomingPeers, () => simulation.incomingPeers.toString(), (value) => simulation.incomingPeers = value);
     let linksCheckBox = document.getElementById(Html.displayLinks);
     linksCheckBox.checked = simulation.displayLinks;
     linksCheckBox.addEventListener("change", (event) => {
         simulation.displayLinks = document.getElementById(Html.displayLinks).checked;
         console.log(`display of links is now ${simulation.displayLinks ? 'enabled' : 'disabled'}`);
+        saveSettings();
     });
     let msgCheckBox = document.getElementById(Html.displayMessages);
     msgCheckBox.checked = simulation.displayMessages;
     msgCheckBox.addEventListener("change", (event) => {
         simulation.displayMessages = document.getElementById(Html.displayMessages).checked;
         console.log(`display of messages is now ${simulation.displayMessages ? 'enabled' : 'disabled'}`);
+        saveSettings();
     });
     let speedSlider = document.getElementById(Html.simulationSpeed);
-    let speedValue = parseInt(speedSlider.value);
-    updateSlider(speedValue);
+    speedSlider.value = simulation.speed.toString();
+    updateSliderText();
+    speedSlider.addEventListener("change", (event) => {
+        let rawValue = event.target.value;
+        let parsedValue = parseInt(rawValue);
+        simulation.speed = parsedValue;
+        console.log(`simulation speed is now ${simulation.speed}`);
+        updateSliderText();
+        saveSettings();
+    });
 }
-function updateSlider(value) {
-    simulation.speed = Math.round(100 / value);
+function setupTextInput(htmlId, initalValue, setterCallback) {
+    let textInput = document.getElementById(htmlId);
+    textInput.value = initalValue();
+    textInput.addEventListener("keyup", (event) => {
+        let rawValue = event.target.value;
+        let parsedValue = parseInt(rawValue);
+        if (!isNaN(parsedValue)) {
+            setterCallback(parsedValue);
+            console.log(`updated ${htmlId} to ${parsedValue}`);
+            saveSettings();
+        }
+    });
+}
+function updateSliderText() {
     let span = this.document.getElementById("speedLabel");
     span.removeChild(span.firstChild);
-    span.appendChild(document.createTextNode(value.toString()));
-    console.log(`simulation speed is now ${simulation.speed}`);
+    span.appendChild(document.createTextNode(simulation.speed.toString()));
 }
 //# sourceMappingURL=main.js.map

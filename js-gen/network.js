@@ -40,7 +40,7 @@ class NetworkController {
         let currentIndex = 0;
         let maxConnectionAttempts = this.processes[pid].maxOutgoingPeers * 2;
         let attemps = 0;
-        while (this.processes[pid].outgoingPeers.length < this.processes[pid].maxOutgoingPeers) {
+        while (this.processes[pid].outgoingPeers.length < this.processes[pid].maxOutgoingPeers && currentIndex < onlineProcesses.length) {
             let peerPid = onlineProcesses[currentIndex];
             let success = await this.processes[pid].requestPeerConnection(peerPid);
             if (success) {
@@ -92,7 +92,7 @@ class NetworkController {
             svgManager.send(sender, targets, message);
         }
         else {
-            await sleep(simulation.speed * 333);
+            await sleep(simulation.speed * 50);
             for (let target of targets) {
                 MessageBus.getInstance().notify(message, target.id.toString());
             }

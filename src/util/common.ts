@@ -6,7 +6,10 @@ namespace Html {
     export const tmpl = "tmpl";
     export const display = "display";
     
-    export const primary = "primary";
+    export const initialProcesses = "initialProcesses";
+    export const joiningProcesses = "joiningProcesses";
+    export const outgoingPeers = "outgoingPeers";
+    export const incomingPeers = "incomingPeers";
     export const displayLinks = "displayLinks";
     export const displayMessages = "displayMessages";
     export const simulationSpeed = "simulationSpeed";

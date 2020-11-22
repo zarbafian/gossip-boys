@@ -1,4 +1,9 @@
 const SVG_NS = "http://www.w3.org/2000/svg";
+function getAnimationDuration(distance) {
+    let numberOfTimeUnits = distance / 300;
+    let durationPerTimeUnit = 20 / simulation.speed;
+    return Math.round(durationPerTimeUnit * numberOfTimeUnits * 1000);
+}
 function toLinkId(id1, id2) {
     return id1 + "-" + id2;
 }
@@ -144,7 +149,7 @@ class SvgManager {
             let senderPositionScreen = this.cartesianToScreen(process.position);
             let targetPositionScreen = this.cartesianToScreen(target.position);
             let d = distance(process.position, target.position);
-            let t = Math.round(d * simulation.speed);
+            let t = getAnimationDuration(d);
             let animation = new MessageAnimation(svgElement, senderPositionScreen, targetPositionScreen, t);
             const onCompletion = () => {
                 MessageBus.getInstance().notify(message, target.id.toString());

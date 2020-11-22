@@ -30,8 +30,10 @@ function init() {
 
     // Simulation
     simulation = new Simulation();
+    simulation.init();
 
     // keyboard contols
+    loadSettings();
     setupContols();
 }
 
@@ -48,15 +50,17 @@ function startStop() {
 }
 
 function setupContols() {
-    // number of initial processes
-    document.getElementById(Html.primary).addEventListener("keyup", (event: any) => {
-        let rawValue = (document.getElementById(Html.primary) as HTMLInputElement).value;
-        let parsedValue = parseInt(rawValue);
-        if(!isNaN(parsedValue)) {
-            simulation.primaryProcessCount = parsedValue;
-            console.log(`updated count of initial processes to ${simulation.primaryProcessCount}`);
-        }
-    });
+    // initial number of processes
+    setupTextInput(Html.initialProcesses, () => simulation.initialProcessCount.toString(), (value: number) => simulation.initialProcessCount = value);
+    
+    // number of processes added each round
+    setupTextInput(Html.joiningProcesses, () => simulation.joiningProcessCount.toString(), (value: number) => simulation.joiningProcessCount = value);
+
+    // number of outgoing processes
+    setupTextInput(Html.outgoingPeers, () => simulation.outgoingPeers.toString(), (value: number) => simulation.outgoingPeers = value);
+
+    // number of incoming processes
+    setupTextInput(Html.incomingPeers, () => simulation.incomingPeers.toString(), (value: number) => simulation.incomingPeers = value);
 
     // display of links
     let linksCheckBox = (document.getElementById(Html.displayLinks) as HTMLInputElement);
@@ -64,6 +68,7 @@ function setupContols() {
     linksCheckBox.addEventListener("change", (event: any) => {
         simulation.displayLinks = (document.getElementById(Html.displayLinks) as HTMLInputElement).checked;
         console.log(`display of links is now ${simulation.displayLinks?'enabled':'disabled'}`);
+        saveSettings();
     });
 
     // display of messages
@@ -72,18 +77,39 @@ function setupContols() {
     msgCheckBox.addEventListener("change", (event: any) => {
         simulation.displayMessages = (document.getElementById(Html.displayMessages) as HTMLInputElement).checked;
         console.log(`display of messages is now ${simulation.displayMessages?'enabled':'disabled'}`);
+        saveSettings();
     });
 
     // simulation speed
     let speedSlider = (document.getElementById(Html.simulationSpeed) as HTMLInputElement);
-    let speedValue = parseInt(speedSlider.value);
-    updateSlider(speedValue); 
+    speedSlider.value = simulation.speed.toString();
+    updateSliderText();
+    speedSlider.addEventListener("change", (event: InputEvent) => {
+        let rawValue = (event.target as HTMLInputElement).value;
+        let parsedValue = parseInt(rawValue);
+        simulation.speed = parsedValue;
+        console.log(`simulation speed is now ${simulation.speed}`);
+        updateSliderText();
+        saveSettings();
+    });
 }
 
-function updateSlider(value: number) {
-    simulation.speed = Math.round(100 / value);
+function setupTextInput(htmlId: string, initalValue: () => string, setterCallback: (value: number) => void) {
+    let textInput = (document.getElementById(htmlId) as HTMLInputElement);
+    textInput.value = initalValue();
+    textInput.addEventListener("keyup", (event: KeyboardEvent) => {
+        let rawValue = (event.target as HTMLInputElement).value;
+        let parsedValue = parseInt(rawValue);
+        if(!isNaN(parsedValue)) {
+            setterCallback(parsedValue);
+            console.log(`updated ${htmlId} to ${parsedValue}`);
+            saveSettings();
+        }
+    });
+}
+
+function updateSliderText() {
     let span = this.document.getElementById("speedLabel");
     span.removeChild(span.firstChild);
-    span.appendChild(document.createTextNode(value .toString()));
-    console.log(`simulation speed is now ${simulation.speed}`);
+    span.appendChild(document.createTextNode(simulation.speed.toString()));
 }
