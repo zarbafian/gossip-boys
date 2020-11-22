@@ -76,7 +76,9 @@ class NetworkController {
                 let link = new Link(id1, id2);
                 networkController.links.addLink(link);
                 let id = toLinkId(id1, id2);
-                svgManager.createLink(id, networkController.processes[link.from].position, networkController.processes[link.to].position);
+                if(simulation.displayLinks) {
+                    svgManager.createLink(id, networkController.processes[link.from].position, networkController.processes[link.to].position);
+                }
             }
             currentIndex++;
             attemps++;
@@ -91,7 +93,7 @@ class NetworkController {
     }
 
     // broadcast a message to all peers
-    broadcast(pid: number, message: Message) {
+    broadcast(pid: number, message: Message): number {
         let sender = this.processes[pid];
         if(sender != null) {
             let targets: Process[] = [];
@@ -99,7 +101,9 @@ class NetworkController {
                 targets.push(this.processes[pid2]);
             }
             this.send(sender, targets, message);
+            return targets.length;
         }
+        return 0;
     }
 
     // gossip a message to all peers except its sender and gossipers
@@ -117,12 +121,14 @@ class NetworkController {
     }
 
     async send(sender: Process, targets: Process[], message: Message) {
-        /*
-        svgManager.send(sender, targets, message);
-        */
-        await sleep(1000);
-        for (let target of targets) {
-            MessageBus.getInstance().notify(message, target.id.toString());
+        if(simulation.displayMessages) {
+            svgManager.send(sender, targets, message);
+        }
+        else {
+            await sleep(simulation.speed * 333);
+            for (let target of targets) {
+                MessageBus.getInstance().notify(message, target.id.toString());
+            }
         }
     }
 
@@ -138,9 +144,4 @@ class NetworkController {
         }
         return result;
     }
-    /*
-    processCount(): number {
-        return Object.keys(this.processes).length;
-    }
-    */
 }

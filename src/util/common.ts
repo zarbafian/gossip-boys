@@ -4,6 +4,12 @@ namespace Html {
     export const svg = "svg";
     export const cmd = "cmd";
     export const tmpl = "tmpl";
+    export const display = "display";
+    
+    export const primary = "primary";
+    export const displayLinks = "displayLinks";
+    export const displayMessages = "displayMessages";
+    export const simulationSpeed = "simulationSpeed";
 }
 
 enum MouseButton {
@@ -17,7 +23,7 @@ enum Color {
     ProcessStarting = "#dd9966",
     ProcessOnline = "#44ff44",
     ProcessSource = "#ff4444",
-    ProcessContaminated = "#2222ff",
+    ProcessInfected = "#2222ff",
     Message = "#4444ff",
     LinkDefault = "#000000",
 }

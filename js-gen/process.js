@@ -4,7 +4,7 @@ var ProcessStatus;
     ProcessStatus[ProcessStatus["Starting"] = 1] = "Starting";
     ProcessStatus[ProcessStatus["Online"] = 2] = "Online";
     ProcessStatus[ProcessStatus["Source"] = 3] = "Source";
-    ProcessStatus[ProcessStatus["Contaminated"] = 4] = "Contaminated";
+    ProcessStatus[ProcessStatus["Infected"] = 4] = "Infected";
 })(ProcessStatus || (ProcessStatus = {}));
 class Process {
     constructor(id, position, status) {
@@ -16,6 +16,7 @@ class Process {
         this.outgoingPeers = [];
         this.incomingPeers = [];
         this.gossipedMessages = {};
+        this.sentMessagesCount = {};
         this.topics = ['broadcast'];
         this.topics.push(this.id.toString());
     }
@@ -76,10 +77,11 @@ class Process {
     }
     broadcast(message) {
         if (message.epidemic) {
-            this.setStatus(ProcessStatus.Contaminated);
+            this.setStatus(ProcessStatus.Infected);
         }
         this.gossipedMessages[message.id] = message;
-        networkController.broadcast(this.id, message);
+        let peerCount = networkController.broadcast(this.id, message);
+        this.sentMessagesCount[message.id] = peerCount;
     }
     getHopCount(messageId) {
         if (messageId in this.gossipedMessages) {
@@ -87,9 +89,15 @@ class Process {
         }
         return -1;
     }
+    getMessageCount(messageId) {
+        if (messageId in this.gossipedMessages) {
+            return this.gossipedMessages[messageId].hops;
+        }
+        return -1;
+    }
     onMessage(message) {
         if (message.epidemic) {
-            this.setStatus(ProcessStatus.Contaminated);
+            this.setStatus(ProcessStatus.Infected);
             if (!Object.keys(this.gossipedMessages).includes(message.id)) {
                 let copy = message.clone();
                 copy.gossipers.push(this.id);

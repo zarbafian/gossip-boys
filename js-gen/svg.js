@@ -18,7 +18,6 @@ class SvgManager {
     init() {
         let svg = document.createElementNS(SVG_NS, "svg");
         svg.setAttribute("id", this.id);
-        svg.setAttribute("style", "border: 1px solid #444444");
         svg.setAttribute("width", this.width.toString());
         svg.setAttribute("height", this.height.toString());
         svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
@@ -53,7 +52,7 @@ class SvgManager {
         };
         svg.addEventListener('mousedown', startDrag);
         svg.addEventListener('mouseup', endDrag);
-        document.body.appendChild(svg);
+        document.getElementById(Html.display).appendChild(svg);
     }
     getMousePosition(event) {
         var CTM = document.getElementById(this.id).getScreenCTM();
@@ -145,7 +144,7 @@ class SvgManager {
             let senderPositionScreen = this.cartesianToScreen(process.position);
             let targetPositionScreen = this.cartesianToScreen(target.position);
             let d = distance(process.position, target.position);
-            let t = Math.round(d * animationSpeed);
+            let t = Math.round(d * simulation.speed);
             let animation = new MessageAnimation(svgElement, senderPositionScreen, targetPositionScreen, t);
             const onCompletion = () => {
                 MessageBus.getInstance().notify(message, target.id.toString());
@@ -165,8 +164,8 @@ class SvgManager {
             case ProcessStatus.Source:
                 color = Color.ProcessSource;
                 break;
-            case ProcessStatus.Contaminated:
-                color = Color.ProcessContaminated;
+            case ProcessStatus.Infected:
+                color = Color.ProcessInfected;
                 break;
             case ProcessStatus.Offline:
             default:

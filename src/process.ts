@@ -3,7 +3,7 @@ enum ProcessStatus {
     Starting,
     Online,
     Source,
-    Contaminated,
+    Infected,
 }
 
 class Process implements MessageBusSubscriber {
@@ -19,6 +19,7 @@ class Process implements MessageBusSubscriber {
     incomingPeers: number[];
 
     gossipedMessages: { [mid: string]: Message };
+    sentMessagesCount: { [mid: string]: number };
 
     constructor(id: number, position: Point, status: ProcessStatus) {
         this.id = id;
@@ -30,6 +31,7 @@ class Process implements MessageBusSubscriber {
         this.incomingPeers = [];
 
         this.gossipedMessages = {};
+        this.sentMessagesCount = {};
 
         this.topics = ['broadcast'];
         this.topics.push(this.id.toString());
@@ -103,12 +105,19 @@ class Process implements MessageBusSubscriber {
 
     broadcast(message: Message) {
         if(message.epidemic) {
-            this.setStatus(ProcessStatus.Contaminated);
+            this.setStatus(ProcessStatus.Infected);
         }
         this.gossipedMessages[message.id] = message;
-        networkController.broadcast(this.id, message);
+        let peerCount = networkController.broadcast(this.id, message);
+        this.sentMessagesCount[message.id] = peerCount;
     }
     getHopCount(messageId: string): number {
+        if(messageId in this.gossipedMessages) {
+            return this.gossipedMessages[messageId].hops;
+        }
+        return -1;
+    }
+    getMessageCount(messageId: string) {
         if(messageId in this.gossipedMessages) {
             return this.gossipedMessages[messageId].hops;
         }
@@ -119,7 +128,7 @@ class Process implements MessageBusSubscriber {
         //console.log(`process ${this.id} received message (id=${message.id}, sender=${message.sender}, gossiper=${message.gossipers[message.gossipers.length-1]}, hops=${message.hops}) from ${message.sender}`);
 
         if(message.epidemic) {
-            this.setStatus(ProcessStatus.Contaminated);
+            this.setStatus(ProcessStatus.Infected);
             if(!Object.keys(this.gossipedMessages).includes(message.id)) {
                 let copy = message.clone();
                 copy.gossipers.push(this.id);

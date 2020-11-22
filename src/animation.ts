@@ -1,12 +1,3 @@
-var animationSpeed: number = 3;
-
-function updateSlider(value: number) {
-    animationSpeed = Math.round(100 / value);
-    let span = this.document.getElementById("speedLabel");
-    span.removeChild(span.firstChild);
-    span.appendChild(document.createTextNode(value .toString()));
-}
-
 class MessageAnimation {
     node: SVGGraphicsElement;
     startValue: Point;

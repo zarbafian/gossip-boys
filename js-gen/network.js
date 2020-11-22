@@ -49,7 +49,9 @@ class NetworkController {
                 let link = new Link(id1, id2);
                 networkController.links.addLink(link);
                 let id = toLinkId(id1, id2);
-                svgManager.createLink(id, networkController.processes[link.from].position, networkController.processes[link.to].position);
+                if (simulation.displayLinks) {
+                    svgManager.createLink(id, networkController.processes[link.from].position, networkController.processes[link.to].position);
+                }
             }
             currentIndex++;
             attemps++;
@@ -69,7 +71,9 @@ class NetworkController {
                 targets.push(this.processes[pid2]);
             }
             this.send(sender, targets, message);
+            return targets.length;
         }
+        return 0;
     }
     gossip(pid, message) {
         let sender = this.processes[pid];
@@ -84,9 +88,14 @@ class NetworkController {
         }
     }
     async send(sender, targets, message) {
-        await sleep(1000);
-        for (let target of targets) {
-            MessageBus.getInstance().notify(message, target.id.toString());
+        if (simulation.displayMessages) {
+            svgManager.send(sender, targets, message);
+        }
+        else {
+            await sleep(simulation.speed * 333);
+            for (let target of targets) {
+                MessageBus.getInstance().notify(message, target.id.toString());
+            }
         }
     }
     getProcessesByStatus(status, shuffle) {

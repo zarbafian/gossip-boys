@@ -1,10 +1,3 @@
-var animationSpeed = 3;
-function updateSlider(value) {
-    animationSpeed = Math.round(100 / value);
-    let span = this.document.getElementById("speedLabel");
-    span.removeChild(span.firstChild);
-    span.appendChild(document.createTextNode(value.toString()));
-}
 class MessageAnimation {
     constructor(node, startValue, endValue, duration) {
         this.node = node;

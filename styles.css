@@ -1,3 +1,25 @@
 body {
     margin: 0px;
+    display: flex;
+}
+button {
+    margin: 0px;
+}
+
+.display {
+    margin: 0px;
+    padding: 0px;
+    background-color: #deb888;
+    display: inline-block;
+    height: 100%;
+    width: calc(100% - 300px);
+}
+
+.settings {
+    float:  right;
+    margin: 0px;
+    padding: 20px;
+    background-color: #DEDEDE;
+    height: 100%;
+    width: 300px;
 }
