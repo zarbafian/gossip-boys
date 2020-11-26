@@ -27,3 +27,7 @@ input {
     height: 100%;
     width: 300px;
 }
+
+.peer {
+    cursor: crosshair;
+}

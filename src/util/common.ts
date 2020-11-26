@@ -23,9 +23,9 @@ namespace Html {
 }
 
 enum MouseButton {
-    Left = 1,
-    Middle = 2,
-    Right = 3,
+    Left = 0,
+    Middle = 1,
+    Right = 2,
 }
 
 enum Color {

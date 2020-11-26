@@ -41,7 +41,26 @@ class SvgManager {
         
         this.point = svg.createSVGPoint();
 
+        let leftClickHandler = (event: any) => {
+            if(event.button == MouseButton.Left) {
+                let pid = this.parseProcessId(event.target.id);
+                //console.log(`clicked: pid=${pid}`);
+                simulation.toggleProcess(pid);
+            }
+        };
+        let rightClickHandler = (event: MouseEvent) => {
+            event.preventDefault();
+            console.log(`clicked: id=${event.target}`);
+        };
+
+        svg.addEventListener('mouseup', leftClickHandler);
+        svg.addEventListener('contextmenu', rightClickHandler);
+
         document.getElementById(Html.display).appendChild(svg);
+    }
+
+    parseProcessId(htmlId: string): number {
+        return parseInt(htmlId.substring(htmlId.lastIndexOf('_') + 1));
     }
 
     getMousePosition(event: any): Point {
@@ -74,13 +93,13 @@ class SvgManager {
         let center = this.cartesianToScreen(peer.position);
 
         let group = document.createElementNS(SVG_NS, "g");
-        group.setAttributeNS(null, "id", "g" + peer.id);
+        group.setAttributeNS(null, "id", "g_" + peer.id);
         group.setAttributeNS(null, "text-anchor", "middle");
         group.setAttributeNS(null, "transform", "translate(" + center.x + "," + center.y + ")");
         
         // circle for process
         let circle = document.createElementNS(SVG_NS, "circle");
-        circle.setAttributeNS(null, "id", peer.id + "circle");
+        circle.setAttributeNS(null, "id", "circle_" + peer.id );
         circle.setAttributeNS(null, "cx", "0");
         circle.setAttributeNS(null, "cy", "0");
         circle.setAttributeNS(null, "r", "3");
@@ -90,10 +109,11 @@ class SvgManager {
         //circle.setAttributeNS(null, "fill", process.byzantine ? Color.ByzantineProcess : Color.CorrectProcess);
         circle.setAttributeNS(null, "stroke", "black");
         circle.setAttributeNS(null, "stroke-opacity", "0.1");
-        circle.setAttributeNS(null, "class", "draggable process");
+        circle.setAttributeNS(null, "class", "draggable peer");
 
         group.appendChild(circle);
 
+        /*
         // process label
         let label = document.createElementNS(SVG_NS, "text");
         label.setAttributeNS(null, "id", peer.id + "label");
@@ -105,6 +125,7 @@ class SvgManager {
         let labelNode = document.createTextNode(peer.id.toString());
         label.appendChild(labelNode);
         group.appendChild(label);
+        */
 
         document.getElementById(this.id).appendChild(group);
     }
@@ -157,19 +178,20 @@ class SvgManager {
     setSourceProcess(pid: number) {
         // circle for source
         let circle = document.createElementNS(SVG_NS, "circle");
-        circle.setAttributeNS(null, "id", pid + "source");
+        circle.setAttributeNS(null, "id", "source_" + pid);
         circle.setAttributeNS(null, "cx", "0");
         circle.setAttributeNS(null, "cy", "0");
         circle.setAttributeNS(null, "r", "10");
         circle.setAttributeNS(null, "fill", Color.ProcessInfected);
         circle.setAttributeNS(null, "opacity", "0.3");
 
-        document.getElementById('g' + pid).appendChild(circle);
+        document.getElementById("g_" + pid).appendChild(circle);
     }
 
     clearSourceProcess(pid: number) {
-        let group = document.getElementById('g' + pid);
-        group.removeChild(group.lastChild);
+        let group = document.getElementById("g_" + pid);
+        let source = document.getElementById("source_" + pid);
+        group.removeChild(source);
     }
 
     send(process: Peer, targets: Peer[], message: Message) {
@@ -208,6 +230,6 @@ class SvgManager {
             default:
                 console.log(`unknown status ${status}`);
         }
-        document.getElementById(pid + "circle").setAttributeNS(null, "fill", color);
+        document.getElementById("circle_" + pid).setAttributeNS(null, "fill", color);
     }
 }

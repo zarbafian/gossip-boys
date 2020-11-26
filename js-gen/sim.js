@@ -24,6 +24,33 @@ class Simulation {
             this.peerMap[peer.id] = peer;
         }
     }
+    async toggleProcess(pid) {
+        if (this.peerMap[pid]) {
+            let peer = this.peerMap[pid];
+            if (peer.running) {
+                await peer.stop();
+                console.log(`peer ${peer.id} has stopped`);
+                for (let i = 0; i < this.onlinePeers.length; i++) {
+                    if (this.onlinePeers[i].id == peer.id) {
+                        let removedPeer = this.onlinePeers.splice(i, 1)[0];
+                        this.offlinePeers.push(removedPeer);
+                        break;
+                    }
+                }
+            }
+            else {
+                peer.start();
+                console.log(`peer ${peer.id} has started`);
+                for (let i = 0; i < this.offlinePeers.length; i++) {
+                    if (this.offlinePeers[i].id == peer.id) {
+                        let removedPeer = this.offlinePeers.splice(i, 1)[0];
+                        this.onlinePeers.push(removedPeer);
+                        break;
+                    }
+                }
+            }
+        }
+    }
     async start() {
         console.log('Starting simulation');
         shuffleArray(this.offlinePeers);
@@ -38,7 +65,7 @@ class Simulation {
         this.onlinePeers.forEach(p => p.running = false);
         for (let p of this.onlinePeers) {
             await p.stop();
-            console.log(`process ${p.id} has stopped`);
+            console.log(`peer ${p.id} has stopped`);
         }
         Array.prototype.push.apply(this.offlinePeers, this.onlinePeers.splice(0));
         DnsService.getInstance().clearPeers();

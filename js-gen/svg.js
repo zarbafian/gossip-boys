@@ -23,7 +23,22 @@ class SvgManager {
         svg.setAttribute("height", this.height.toString());
         svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
         this.point = svg.createSVGPoint();
+        let leftClickHandler = (event) => {
+            if (event.button == MouseButton.Left) {
+                let pid = this.parseProcessId(event.target.id);
+                simulation.toggleProcess(pid);
+            }
+        };
+        let rightClickHandler = (event) => {
+            event.preventDefault();
+            console.log(`clicked: id=${event.target}`);
+        };
+        svg.addEventListener('mouseup', leftClickHandler);
+        svg.addEventListener('contextmenu', rightClickHandler);
         document.getElementById(Html.display).appendChild(svg);
+    }
+    parseProcessId(htmlId) {
+        return parseInt(htmlId.substring(htmlId.lastIndexOf('_') + 1));
     }
     getMousePosition(event) {
         var CTM = document.getElementById(this.id).getScreenCTM();
@@ -47,11 +62,11 @@ class SvgManager {
     createProcess(peer) {
         let center = this.cartesianToScreen(peer.position);
         let group = document.createElementNS(SVG_NS, "g");
-        group.setAttributeNS(null, "id", "g" + peer.id);
+        group.setAttributeNS(null, "id", "g_" + peer.id);
         group.setAttributeNS(null, "text-anchor", "middle");
         group.setAttributeNS(null, "transform", "translate(" + center.x + "," + center.y + ")");
         let circle = document.createElementNS(SVG_NS, "circle");
-        circle.setAttributeNS(null, "id", peer.id + "circle");
+        circle.setAttributeNS(null, "id", "circle_" + peer.id);
         circle.setAttributeNS(null, "cx", "0");
         circle.setAttributeNS(null, "cy", "0");
         circle.setAttributeNS(null, "r", "3");
@@ -59,18 +74,8 @@ class SvgManager {
         circle.setAttributeNS(null, "opacity", "1");
         circle.setAttributeNS(null, "stroke", "black");
         circle.setAttributeNS(null, "stroke-opacity", "0.1");
-        circle.setAttributeNS(null, "class", "draggable process");
+        circle.setAttributeNS(null, "class", "draggable peer");
         group.appendChild(circle);
-        let label = document.createElementNS(SVG_NS, "text");
-        label.setAttributeNS(null, "id", peer.id + "label");
-        label.setAttributeNS(null, "x", "0");
-        label.setAttributeNS(null, "y", "0");
-        label.setAttributeNS(null, "y", "0");
-        label.setAttributeNS(null, "class", "label");
-        label.setAttributeNS(null, "opacity", "0");
-        let labelNode = document.createTextNode(peer.id.toString());
-        label.appendChild(labelNode);
-        group.appendChild(label);
         document.getElementById(this.id).appendChild(group);
     }
     createLink(id, start, end) {
@@ -111,17 +116,18 @@ class SvgManager {
     }
     setSourceProcess(pid) {
         let circle = document.createElementNS(SVG_NS, "circle");
-        circle.setAttributeNS(null, "id", pid + "source");
+        circle.setAttributeNS(null, "id", "source_" + pid);
         circle.setAttributeNS(null, "cx", "0");
         circle.setAttributeNS(null, "cy", "0");
         circle.setAttributeNS(null, "r", "10");
         circle.setAttributeNS(null, "fill", Color.ProcessInfected);
         circle.setAttributeNS(null, "opacity", "0.3");
-        document.getElementById('g' + pid).appendChild(circle);
+        document.getElementById("g_" + pid).appendChild(circle);
     }
     clearSourceProcess(pid) {
-        let group = document.getElementById('g' + pid);
-        group.removeChild(group.lastChild);
+        let group = document.getElementById("g_" + pid);
+        let source = document.getElementById("source_" + pid);
+        group.removeChild(source);
     }
     send(process, targets, message) {
         for (let target of targets) {
@@ -156,7 +162,7 @@ class SvgManager {
             default:
                 console.log(`unknown status ${status}`);
         }
-        document.getElementById(pid + "circle").setAttributeNS(null, "fill", color);
+        document.getElementById("circle_" + pid).setAttributeNS(null, "fill", color);
     }
 }
 //# sourceMappingURL=svg.js.map

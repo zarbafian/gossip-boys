@@ -21,9 +21,9 @@ var Html;
 })(Html || (Html = {}));
 var MouseButton;
 (function (MouseButton) {
-    MouseButton[MouseButton["Left"] = 1] = "Left";
-    MouseButton[MouseButton["Middle"] = 2] = "Middle";
-    MouseButton[MouseButton["Right"] = 3] = "Right";
+    MouseButton[MouseButton["Left"] = 0] = "Left";
+    MouseButton[MouseButton["Middle"] = 1] = "Middle";
+    MouseButton[MouseButton["Right"] = 2] = "Right";
 })(MouseButton || (MouseButton = {}));
 var Color;
 (function (Color) {
