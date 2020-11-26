@@ -12,6 +12,10 @@ var Html;
     Html.displayLinks = "displayLinks";
     Html.displayMessages = "displayMessages";
     Html.simulationSpeed = "simulationSpeed";
+    Html.samplingParamT = "spt";
+    Html.samplingParamC = "spc";
+    Html.samplingParamH = "sph";
+    Html.samplingParamS = "sps";
 })(Html || (Html = {}));
 var MouseButton;
 (function (MouseButton) {
@@ -22,10 +26,9 @@ var MouseButton;
 var Color;
 (function (Color) {
     Color["ProcessOffline"] = "#FFFFFF";
-    Color["ProcessStarting"] = "#dd9966";
     Color["ProcessOnline"] = "#44ff44";
-    Color["ProcessSource"] = "#ff4444";
     Color["ProcessInfected"] = "#2222ff";
+    Color["ProcessRemoved"] = "#ff4444";
     Color["Message"] = "#4444ff";
     Color["LinkDefault"] = "#000000";
 })(Color || (Color = {}));

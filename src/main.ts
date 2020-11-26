@@ -1,6 +1,4 @@
-//var processManager: ProcessManager;
-var cmdManager: CmdManager;
-var networkController: NetworkController;
+var network: Network;
 var svgManager: SvgManager;
 var simulation: Simulation;
 
@@ -21,12 +19,8 @@ function init() {
     svgManager = new SvgManager(Html.svg, width, height);
     svgManager.init();
 
-    // Command line
-    //cmdManager = new CmdManager(Html.cmd);
-    //document.getElementById(Html.cmd).addEventListener('keyup', cmdManager.handleKeyup);
-
     // Network of processes
-    networkController = new NetworkController();
+    network = new Network();
 
     // Simulation
     simulation = new Simulation();
@@ -37,14 +31,19 @@ function init() {
     setupContols();
 }
 
-function startStop() {
+async function startStop() {
     if(simulation.running) {
+        (document.getElementById('startStopButton') as HTMLInputElement).disabled = true;
         simulation.running = false;
+        await simulation.stop();
+        (document.getElementById('startStopButton') as HTMLInputElement).disabled = false;
         (document.getElementById('startStopButton') as HTMLInputElement).innerText = 'START';
     }
     else {
+        (document.getElementById('startStopButton') as HTMLInputElement).disabled = true;
         simulation.running = true;
         simulation.start();
+        (document.getElementById('startStopButton') as HTMLInputElement).disabled = false;
         (document.getElementById('startStopButton') as HTMLInputElement).innerText = 'STOP';
     }
 }
@@ -92,6 +91,12 @@ function setupContols() {
         updateSliderText();
         saveSettings();
     });
+
+    // peer sampling algorithm
+    setupTextInput(Html.samplingParamT, () => simulation.T.toString(), (value: number) => simulation.T = value);
+    setupTextInput(Html.samplingParamC, () => simulation.c.toString(), (value: number) => simulation.c = value);
+    setupTextInput(Html.samplingParamH, () => simulation.H.toString(), (value: number) => simulation.H = value);
+    setupTextInput(Html.samplingParamS, () => simulation.S.toString(), (value: number) => simulation.S = value);
 }
 
 function setupTextInput(htmlId: string, initalValue: () => string, setterCallback: (value: number) => void) {

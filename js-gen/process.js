@@ -38,13 +38,12 @@ class Process {
         for (let pid of this.incomingPeers) {
             this.requestPeerDisconnection(pid);
         }
-        networkController.links.removeByProcess(this.id);
+        network.links.removeByProcess(this.id);
         this.outgoingPeers = [];
         this.incomingPeers = [];
     }
     setStatus(status) {
         this.status = status;
-        svgManager.setProcessStatus(this.id, this.status);
     }
     disconnectFromPeer(pid) {
         if (this.outgoingPeers.indexOf(pid) !== -1) {
@@ -65,24 +64,16 @@ class Process {
         return true;
     }
     requestPeerDisconnection(pid) {
-        networkController.processes[pid].onPeerDisconnectionRequest(this.id);
+        network.processes[pid].onPeerDisconnectionRequest(this.id);
         this.disconnectFromPeer(pid);
     }
     async requestPeerConnection(pid) {
-        let success = await networkController.processes[pid].onPeerConnectionRequest(this.id);
+        let success = await network.processes[pid].onPeerConnectionRequest(this.id);
         if (success) {
             this.outgoingPeers.push(pid);
             return true;
         }
         return false;
-    }
-    broadcast(message) {
-        if (message.epidemic) {
-            this.setStatus(ProcessStatus.Infected);
-        }
-        this.gossipedMessages[message.id] = message;
-        let peerCount = networkController.broadcast(this.id, message);
-        this.sentMessagesCount[message.id] = peerCount;
     }
     getHopCount(messageId) {
         if (messageId in this.gossipedMessages) {
@@ -100,27 +91,6 @@ class Process {
         if (message.epidemic) {
             this.setStatus(ProcessStatus.Infected);
         }
-    }
-    randomGossip(message) {
-        this.setStatus(ProcessStatus.Infected);
-        let onlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Online, true);
-        for (let pid of onlineProcesses) {
-            if (!this.gossipedPeers[message.id]) {
-                networkController.send(networkController.processes[this.id], [networkController.processes[pid]], message);
-                this.gossipedPeers[message.id] = [pid];
-                break;
-            }
-            else if (!this.gossipedPeers[message.id].includes(pid)) {
-                networkController.send(networkController.processes[this.id], [networkController.processes[pid]], message);
-                this.gossipedPeers[message.id].push(pid);
-                break;
-            }
-            else {
-                continue;
-            }
-        }
-        this.gossipedMessages[message.id] = message;
-        this.sentMessagesCount[message.id] = (this.sentMessagesCount[message.id] || 0) + 1;
     }
 }
 //# sourceMappingURL=process.js.map

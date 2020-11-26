@@ -8,98 +8,64 @@ class Simulation {
         this.displayLinks = true;
         this.displayMessages = true;
         this.speed = 20;
+        this.onlinePeers = [];
+        this.offlinePeers = [];
+        this.peerMap = {};
+        this.T = 1000;
+        this.c = 30;
+        this.H = 2;
+        this.S = 15;
     }
     init() {
-        networkController.generate();
+        this.offlinePeers = this.generateNetwork();
+        for (let peer of this.offlinePeers) {
+            this.peerMap[peer.id] = peer;
+        }
     }
     async start() {
+        console.log('Starting simulation');
+        shuffleArray(this.offlinePeers);
+        this.onlinePeers = this.offlinePeers.splice(0, this.initialProcessCount);
+        DnsService.getInstance().registerPeer(this.onlinePeers[0].id);
+        for (let p of this.onlinePeers) {
+            p.start();
+        }
         console.log('Simulation started');
-        let primaryProcess = getRandomCombination(networkController.getProcessKeys(), this.initialProcessCount);
-        networkController.primaryProcesses = primaryProcess.slice(0);
-        for (let pid of primaryProcess) {
-            networkController.processes[pid].setStatus(ProcessStatus.Online);
+    }
+    async stop() {
+        this.onlinePeers.forEach(p => p.running = false);
+        for (let p of this.onlinePeers) {
+            await p.stop();
+            console.log(`process ${p.id} has stopped`);
         }
-        for (let pid of primaryProcess) {
-            await networkController.startProcess(pid);
-        }
-        while (this.running) {
-            let onlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Online, false);
-            await this.randomizedGossip(onlineProcesses);
-            await sleep(3000);
-            onlineProcesses.forEach(pid => networkController.processes[pid].setStatus(ProcessStatus.Online));
-            let offlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Offline, true);
-            if (offlineProcesses.length >= simulation.joiningProcessCount) {
-                for (let i = 0; i < simulation.joiningProcessCount; i++) {
-                    networkController.startProcess(offlineProcesses[i]);
+        Array.prototype.push.apply(this.offlinePeers, this.onlinePeers.splice(0));
+        DnsService.getInstance().clearPeers();
+        console.log(`Simulation stopped`);
+    }
+    generateNetwork() {
+        let creationProbability = 0.7;
+        let areaSize = 24;
+        let width = svgManager.width;
+        let height = svgManager.height;
+        let maxX = Math.floor(width / areaSize);
+        let maxY = Math.floor(height / areaSize);
+        let nextId = 1;
+        let peers = [];
+        for (let x = 1; x < maxX - 1; x++) {
+            for (let y = 1; y < maxY - 1; y++) {
+                let px = x * areaSize + getRandomInt(areaSize - 8) + 4 - svgManager.zero.x;
+                let py = y * areaSize + getRandomInt(areaSize - 8) + 4 - svgManager.zero.y;
+                let proba = Math.random();
+                if (proba < creationProbability) {
+                    let peer = new Peer(nextId, new Point(px, py));
+                    nextId++;
+                    peers.push(peer);
+                    svgManager.createProcess(peer);
                 }
             }
         }
-        await sleep(3000);
-        for (let pid of primaryProcess) {
-            networkController.stopProcess(pid);
-        }
-        networkController.primaryProcesses = [];
-        console.log('Simulation stopped');
-    }
-    async randomizedGossip(onlineProcesses) {
-        console.log(`starting randomizedGossip with ${onlineProcesses.length} online processes;`);
-        let selectedProcess = onlineProcesses[getRandomInt(onlineProcesses.length)];
-        svgManager.setSourceProcess(selectedProcess);
-        let message = Message.new('test', selectedProcess, true);
-        networkController.processes[selectedProcess].randomGossip(message);
-        await sleep(1000);
-        let threshold = onlineProcesses.length;
-        let infectedProcesses = networkController.getProcessesByStatus(ProcessStatus.Infected, false);
-        while (infectedProcesses.length < threshold) {
-            for (let pid of infectedProcesses) {
-                networkController.processes[pid].randomGossip(message);
-            }
-            await sleep(1000);
-            infectedProcesses = networkController.getProcessesByStatus(ProcessStatus.Infected, false);
-        }
-        let messageCount = 0;
-        infectedProcesses.forEach(pid => {
-            let msgs = networkController.processes[pid].getMessageCount(message.id);
-            messageCount += msgs;
-        });
-        svgManager.clearSourceProcess(selectedProcess);
-        console.log(`Everyone up-to-date: messageCount=${messageCount}`);
-        document.getElementById('processCount').innerText = infectedProcesses.length.toString();
-        document.getElementById('messageCount').innerText = messageCount.toString();
-    }
-    async gossipAlgoStep(onlineProcesses) {
-        for (let pid of onlineProcesses) {
-            networkController.createOutgoingConnections(pid);
-        }
-        let selectedProcess = onlineProcesses[getRandomInt(onlineProcesses.length)];
-        let totalCount = onlineProcesses.length;
-        console.log(`starting propagation with ${totalCount} online processes;`);
-        console.log(`broadcast from process: ${selectedProcess}`);
-        svgManager.setSourceProcess(selectedProcess);
-        let message = Message.new('test', selectedProcess, true);
-        networkController.processes[selectedProcess].broadcast(message);
-        let contaminatedProcesses = networkController.getProcessesByStatus(ProcessStatus.Infected, false);
-        while (contaminatedProcesses.length < totalCount && simulation.running) {
-            console.log('will wait for full propagation');
-            await sleep(1000);
-            contaminatedProcesses = networkController.getProcessesByStatus(ProcessStatus.Infected, false);
-        }
-        let maxHops = 1;
-        let minHops = 1;
-        let messageCount = 0;
-        onlineProcesses.forEach(pid => {
-            let hops = networkController.processes[pid].getHopCount(message.id);
-            if (hops > maxHops) {
-                maxHops = hops;
-            }
-            if (hops < minHops) {
-                minHops = hops;
-            }
-            let msgs = networkController.processes[pid].getMessageCount(message.id);
-            messageCount += msgs;
-        });
-        svgManager.clearSourceProcess(selectedProcess);
-        console.log(`Everyone up-to-date: minHops=${minHops}, maxHops=${maxHops}, messageCount=${messageCount}`);
+        console.log(`Created ${peers.length} peers`);
+        return peers;
     }
 }
 //# sourceMappingURL=sim.js.map

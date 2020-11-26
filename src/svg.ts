@@ -19,12 +19,6 @@ class SvgManager {
 
     point: any;
 
-    // process edition
-    selectedElement: SVGGraphicsElement = null;
-    offset: Point = null;
-    addProcessOnMouseUp = false;
-    move: Point = null;
-
     // link edition
     fromElement: SVGGraphicsElement = null;
     toElement: SVGGraphicsElement = null;
@@ -46,85 +40,6 @@ class SvgManager {
         svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
         
         this.point = svg.createSVGPoint();
-        
-        let self = this;
-
-        let startDrag = (event: any) => {
-            //if(event.which == MouseButton.Left && !event.altKey && fromElement == null) {
-            if(event.which == MouseButton.Left) {
-                if(event.target.classList.contains("draggable")) {
-                    // left clicked on a process: move it
-                    self.selectedElement = event.target.parentNode;
-                    self.offset = this.getMousePosition(event);
-                    let transformRaw = self.selectedElement.getAttributeNS(null, "transform");
-                    let transform = self.parseTransform(transformRaw);
-                    self.offset.x -= transform.x;
-                    self.offset.y -= transform.y;
-
-                }
-            }
-        };
-
-        let endDrag = (event: any) => {
-            if(event.which == MouseButton.Left) {
-                if(event.altKey || self.fromElement != null) {
-                    /*
-                    if (event.target.classList.contains("draggable")) {
-                        if(self.fromElement != null) {
-                            // end of link
-                            self.toElement = event.target.parentNode;
-                            let fromElementId = parseInt(self.fromElement.id.substring(1));
-                            let toElementId = parseInt(self.toElement.id.substring(1));
-                            processManager.addLink(fromElementId, toElementId);
-                            self.fromElement = null;
-                            self.toElement = null;
-                            removeTempLink();
-                        }
-                        else {
-                            // start of link
-                            self.fromElement = event.target.parentNode;
-                            let elementId = parseInt(self.fromElement.id.substring(1));
-                            let process = processManager.processes[elementId];
-                            this.createLink(Html.tmpl, process.position, process.position);
-                        }
-                    }
-                    */
-                }
-                else{
-                    if(self.selectedElement != null) {
-                        // either end of drag
-                        
-                        // TODO
-                        // saveProcesses();
-                    }
-                    else if(self.addProcessOnMouseUp) {
-                        /*
-                        // creation of a new process
-                        self.addProcessOnMouseUp = false;
-                        self.point.x = event.clientX;
-                        self.point.y = event.clientY;
-        
-                        // the cursor point, translated into svg coordinates
-                        let screenPoint = self.point.matrixTransform(svg.getScreenCTM().inverse());
-                        let cartesianPoint = this.screenToCartesian(new Point(screenPoint.x, screenPoint.y));
-
-                        // TODO
-                        //processManager.addProcess(cartesianPoint, event.shiftKey);
-                        let process = new Process(-1, cartesianPoint);
-                        process.position = cartesianPoint;
-                        self.createProcess(process);
-                        */
-                    }
-                    self.selectedElement = null;
-                    self.offset = null;
-                    self.move = null;
-                }
-            }
-        };
-
-        svg.addEventListener('mousedown', startDrag);
-        //svg.addEventListener('mousemove', drag);
-        svg.addEventListener('mouseup', endDrag);
 
         document.getElementById(Html.display).appendChild(svg);
     }
@@ -154,18 +69,18 @@ class SvgManager {
     }
 
     //createProcess(process: Process) {
-    createProcess(process: any) {
+    createProcess(peer: Peer) {
 
-        let center = this.cartesianToScreen(process.position);
+        let center = this.cartesianToScreen(peer.position);
 
         let group = document.createElementNS(SVG_NS, "g");
-        group.setAttributeNS(null, "id", "g" + process.id);
+        group.setAttributeNS(null, "id", "g" + peer.id);
         group.setAttributeNS(null, "text-anchor", "middle");
         group.setAttributeNS(null, "transform", "translate(" + center.x + "," + center.y + ")");
         
         // circle for process
         let circle = document.createElementNS(SVG_NS, "circle");
-        circle.setAttributeNS(null, "id", process.id + "circle");
+        circle.setAttributeNS(null, "id", peer.id + "circle");
         circle.setAttributeNS(null, "cx", "0");
         circle.setAttributeNS(null, "cy", "0");
         circle.setAttributeNS(null, "r", "3");
@@ -178,6 +93,18 @@ class SvgManager {
         circle.setAttributeNS(null, "class", "draggable process");
 
         group.appendChild(circle);
+
+        // process label
+        let label = document.createElementNS(SVG_NS, "text");
+        label.setAttributeNS(null, "id", peer.id + "label");
+        label.setAttributeNS(null, "x", "0");
+        label.setAttributeNS(null, "y", "0");
+        label.setAttributeNS(null, "y", "0");
+        label.setAttributeNS(null, "class", "label");
+        label.setAttributeNS(null, "opacity", "0");
+        let labelNode = document.createTextNode(peer.id.toString());
+        label.appendChild(labelNode);
+        group.appendChild(label);
 
         document.getElementById(this.id).appendChild(group);
     }
@@ -201,6 +128,12 @@ class SvgManager {
 
         let svgElement = document.getElementById(this.id);
         svgElement.insertBefore(line, svgElement.firstChild);
+    }
+
+    removeLink(link: Link): void {
+        let svgElement = document.getElementById(this.id);
+        let linkElement = document.getElementById(link.toId());
+        svgElement.removeChild(linkElement);
     }
 
     newMessage(id: string, position: Point, color: string): SVGGraphicsElement {
@@ -228,8 +161,8 @@ class SvgManager {
         circle.setAttributeNS(null, "cx", "0");
         circle.setAttributeNS(null, "cy", "0");
         circle.setAttributeNS(null, "r", "10");
-        circle.setAttributeNS(null, "fill", Color.ProcessSource);
-        circle.setAttributeNS(null, "opacity", "0.2");
+        circle.setAttributeNS(null, "fill", Color.ProcessInfected);
+        circle.setAttributeNS(null, "opacity", "0.3");
 
         document.getElementById('g' + pid).appendChild(circle);
     }
@@ -239,7 +172,7 @@ class SvgManager {
         group.removeChild(group.lastChild);
     }
 
-    send(process: Process, targets: Process[], message: Message) {
+    send(process: Peer, targets: Peer[], message: Message) {
         for (let target of targets) {
             let msgId = "msgFROM" + process.id + "TO" + target.id;
             let svgElement = this.newMessage(msgId, process.position, Color.Message);
@@ -256,25 +189,24 @@ class SvgManager {
         }
     }
 
-    setProcessStatus(pid: number, status: ProcessStatus) {
+    setProcessStatus(pid: number, status: PeerStatus) {
         let color;
         switch(status) {
-            case ProcessStatus.Starting:
-                color = Color.ProcessStarting;
-                break;
-            case ProcessStatus.Online:
+            case PeerStatus.Online:
                 color = Color.ProcessOnline;
+                //document.getElementById(pid + "label").setAttributeNS(null, "opacity", "1");;
                 break;
-            case ProcessStatus.Source:
-                color = Color.ProcessSource;
-                break;
-            case ProcessStatus.Infected:
-                color = Color.ProcessInfected;
-                break;
-            case ProcessStatus.Offline:
-            default:
+            case PeerStatus.Offline:
                 color = Color.ProcessOffline;
                 break;
+            case PeerStatus.Infected:
+                color = Color.ProcessInfected;
+                break;
+            case PeerStatus.Removed:
+                color = Color.ProcessRemoved;
+                break;
+            default:
+                console.log(`unknown status ${status}`);
         }
         document.getElementById(pid + "circle").setAttributeNS(null, "fill", color);
     }

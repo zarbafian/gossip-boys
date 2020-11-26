@@ -76,6 +76,8 @@ class Message {
     epidemic: boolean;
     hops: number;
 
+    payload: any;
+
     private constructor(id: string, value: string, sender: number, gossiper: number, broadcast: boolean) {
         this.id = id;
         this.value = value;

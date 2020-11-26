@@ -1,5 +1,4 @@
-var cmdManager;
-var networkController;
+var network;
 var svgManager;
 var simulation;
 window.addEventListener("keyup", (event) => {
@@ -15,20 +14,25 @@ function init() {
     let height = window.innerHeight;
     svgManager = new SvgManager(Html.svg, width, height);
     svgManager.init();
-    networkController = new NetworkController();
+    network = new Network();
     simulation = new Simulation();
     simulation.init();
     loadSettings();
     setupContols();
 }
-function startStop() {
+async function startStop() {
     if (simulation.running) {
+        document.getElementById('startStopButton').disabled = true;
         simulation.running = false;
+        await simulation.stop();
+        document.getElementById('startStopButton').disabled = false;
         document.getElementById('startStopButton').innerText = 'START';
     }
     else {
+        document.getElementById('startStopButton').disabled = true;
         simulation.running = true;
         simulation.start();
+        document.getElementById('startStopButton').disabled = false;
         document.getElementById('startStopButton').innerText = 'STOP';
     }
 }
@@ -62,6 +66,10 @@ function setupContols() {
         updateSliderText();
         saveSettings();
     });
+    setupTextInput(Html.samplingParamT, () => simulation.T.toString(), (value) => simulation.T = value);
+    setupTextInput(Html.samplingParamC, () => simulation.c.toString(), (value) => simulation.c = value);
+    setupTextInput(Html.samplingParamH, () => simulation.H.toString(), (value) => simulation.H = value);
+    setupTextInput(Html.samplingParamS, () => simulation.S.toString(), (value) => simulation.S = value);
 }
 function setupTextInput(htmlId, initalValue, setterCallback) {
     let textInput = document.getElementById(htmlId);

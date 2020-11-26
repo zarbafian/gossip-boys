@@ -6,11 +6,10 @@ class Link {
         this.from = from;
         this.to = to;
     }
-    /*
+    
     toId() {
         return toLinkId(this.from, this.to);
     }
-    */
 }
 
 class Links {
@@ -25,7 +24,7 @@ class Links {
         return this.linksArray.slice(0);
     }
 
-    getProcessPeers(pid: number): number[] {
+    getConnectedPeers(pid: number): number[] {
         if(this.linksMap.hasOwnProperty(pid)) {
             return this.linksMap[pid].slice(0);
         }
@@ -45,7 +44,7 @@ class Links {
     addLink(link: Link): boolean {
         for (let tmpLink of this.linksArray) {
             if ( (link.from == tmpLink.from && link.to == tmpLink.to) || (link.from == tmpLink.to && link.to == tmpLink.from) ) {
-                //console.log("link already exists: " + tmpLink.from + " -> " + tmpLink.to);
+                console.log("link already exists: " + tmpLink.from + " -> " + tmpLink.to);
                 return false;
             }
         }

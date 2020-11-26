@@ -1,6 +1,5 @@
 var StorageKey;
 (function (StorageKey) {
-    StorageKey.history = "history";
     StorageKey.initialProcessCount = "initialProcessCount";
     StorageKey.joiningProcessCount = "joiningProcessCount";
     StorageKey.displayLinks = "displayLinks";
@@ -8,13 +7,11 @@ var StorageKey;
     StorageKey.simulationSpeed = "simulationSpeed";
     StorageKey.outgoingPeers = "outgoingPeers";
     StorageKey.incomingPeers = "incomingPeers";
+    StorageKey.samplingParamT = "spt";
+    StorageKey.samplingParamC = "spc";
+    StorageKey.samplingParamH = "sph";
+    StorageKey.samplingParamS = "sps";
 })(StorageKey || (StorageKey = {}));
-function saveHistory() {
-    localStorage.setItem(StorageKey.history, JSON.stringify(cmdManager.history));
-}
-function loadHistory() {
-    return JSON.parse(localStorage.getItem(StorageKey.history)) || [];
-}
 function saveSettings() {
     localStorage.setItem(StorageKey.initialProcessCount, simulation.initialProcessCount.toString());
     localStorage.setItem(StorageKey.joiningProcessCount, simulation.joiningProcessCount.toString());
@@ -23,6 +20,10 @@ function saveSettings() {
     localStorage.setItem(StorageKey.simulationSpeed, simulation.speed.toString());
     localStorage.setItem(StorageKey.outgoingPeers, simulation.outgoingPeers.toString());
     localStorage.setItem(StorageKey.incomingPeers, simulation.incomingPeers.toString());
+    localStorage.setItem(StorageKey.samplingParamT, simulation.T.toString());
+    localStorage.setItem(StorageKey.samplingParamC, simulation.c.toString());
+    localStorage.setItem(StorageKey.samplingParamH, simulation.H.toString());
+    localStorage.setItem(StorageKey.samplingParamS, simulation.S.toString());
 }
 function loadSettings() {
     if (localStorage.getItem(StorageKey.initialProcessCount)) {
@@ -34,6 +35,10 @@ function loadSettings() {
         simulation.outgoingPeers = parseInt(localStorage.getItem(StorageKey.outgoingPeers));
         simulation.incomingPeers = parseInt(localStorage.getItem(StorageKey.incomingPeers));
         simulation.speed = parseInt(localStorage.getItem(StorageKey.simulationSpeed));
+        simulation.T = parseInt(localStorage.getItem(StorageKey.samplingParamT));
+        simulation.c = parseInt(localStorage.getItem(StorageKey.samplingParamC));
+        simulation.H = parseInt(localStorage.getItem(StorageKey.samplingParamH));
+        simulation.S = parseInt(localStorage.getItem(StorageKey.samplingParamS));
     }
     else {
         console.log('no settings found');

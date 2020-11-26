@@ -9,7 +9,7 @@ button {
 .display {
     margin: 0px;
     padding: 0px;
-    background-color: #deb888;
+    background-color: #ffffff;
     display: inline-block;
     height: 100%;
     width: calc(100% - 300px);
@@ -19,7 +19,7 @@ button {
     float:  right;
     margin: 0px;
     padding: 20px;
-    background-color: #DEDEDE;
+    background-color: #f3f3f3;
     height: 100%;
     width: 300px;
 }

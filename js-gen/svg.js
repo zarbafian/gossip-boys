@@ -9,10 +9,6 @@ function toLinkId(id1, id2) {
 }
 class SvgManager {
     constructor(id, width, height) {
-        this.selectedElement = null;
-        this.offset = null;
-        this.addProcessOnMouseUp = false;
-        this.move = null;
         this.fromElement = null;
         this.toElement = null;
         this.id = id;
@@ -27,36 +23,6 @@ class SvgManager {
         svg.setAttribute("height", this.height.toString());
         svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
         this.point = svg.createSVGPoint();
-        let self = this;
-        let startDrag = (event) => {
-            if (event.which == MouseButton.Left) {
-                if (event.target.classList.contains("draggable")) {
-                    self.selectedElement = event.target.parentNode;
-                    self.offset = this.getMousePosition(event);
-                    let transformRaw = self.selectedElement.getAttributeNS(null, "transform");
-                    let transform = self.parseTransform(transformRaw);
-                    self.offset.x -= transform.x;
-                    self.offset.y -= transform.y;
-                }
-            }
-        };
-        let endDrag = (event) => {
-            if (event.which == MouseButton.Left) {
-                if (event.altKey || self.fromElement != null) {
-                }
-                else {
-                    if (self.selectedElement != null) {
-                    }
-                    else if (self.addProcessOnMouseUp) {
-                    }
-                    self.selectedElement = null;
-                    self.offset = null;
-                    self.move = null;
-                }
-            }
-        };
-        svg.addEventListener('mousedown', startDrag);
-        svg.addEventListener('mouseup', endDrag);
         document.getElementById(Html.display).appendChild(svg);
     }
     getMousePosition(event) {
@@ -78,14 +44,14 @@ class SvgManager {
     cartesianToScreen(point) {
         return new Point(point.x + this.zero.x, -point.y + this.zero.y);
     }
-    createProcess(process) {
-        let center = this.cartesianToScreen(process.position);
+    createProcess(peer) {
+        let center = this.cartesianToScreen(peer.position);
         let group = document.createElementNS(SVG_NS, "g");
-        group.setAttributeNS(null, "id", "g" + process.id);
+        group.setAttributeNS(null, "id", "g" + peer.id);
         group.setAttributeNS(null, "text-anchor", "middle");
         group.setAttributeNS(null, "transform", "translate(" + center.x + "," + center.y + ")");
         let circle = document.createElementNS(SVG_NS, "circle");
-        circle.setAttributeNS(null, "id", process.id + "circle");
+        circle.setAttributeNS(null, "id", peer.id + "circle");
         circle.setAttributeNS(null, "cx", "0");
         circle.setAttributeNS(null, "cy", "0");
         circle.setAttributeNS(null, "r", "3");
@@ -95,6 +61,16 @@ class SvgManager {
         circle.setAttributeNS(null, "stroke-opacity", "0.1");
         circle.setAttributeNS(null, "class", "draggable process");
         group.appendChild(circle);
+        let label = document.createElementNS(SVG_NS, "text");
+        label.setAttributeNS(null, "id", peer.id + "label");
+        label.setAttributeNS(null, "x", "0");
+        label.setAttributeNS(null, "y", "0");
+        label.setAttributeNS(null, "y", "0");
+        label.setAttributeNS(null, "class", "label");
+        label.setAttributeNS(null, "opacity", "0");
+        let labelNode = document.createTextNode(peer.id.toString());
+        label.appendChild(labelNode);
+        group.appendChild(label);
         document.getElementById(this.id).appendChild(group);
     }
     createLink(id, start, end) {
@@ -113,6 +89,11 @@ class SvgManager {
         line.setAttributeNS(null, "opacity", "0.5");
         let svgElement = document.getElementById(this.id);
         svgElement.insertBefore(line, svgElement.firstChild);
+    }
+    removeLink(link) {
+        let svgElement = document.getElementById(this.id);
+        let linkElement = document.getElementById(link.toId());
+        svgElement.removeChild(linkElement);
     }
     newMessage(id, position, color) {
         let center = this.cartesianToScreen(position);
@@ -134,8 +115,8 @@ class SvgManager {
         circle.setAttributeNS(null, "cx", "0");
         circle.setAttributeNS(null, "cy", "0");
         circle.setAttributeNS(null, "r", "10");
-        circle.setAttributeNS(null, "fill", Color.ProcessSource);
-        circle.setAttributeNS(null, "opacity", "0.2");
+        circle.setAttributeNS(null, "fill", Color.ProcessInfected);
+        circle.setAttributeNS(null, "opacity", "0.3");
         document.getElementById('g' + pid).appendChild(circle);
     }
     clearSourceProcess(pid) {
@@ -160,22 +141,20 @@ class SvgManager {
     setProcessStatus(pid, status) {
         let color;
         switch (status) {
-            case ProcessStatus.Starting:
-                color = Color.ProcessStarting;
-                break;
-            case ProcessStatus.Online:
+            case PeerStatus.Online:
                 color = Color.ProcessOnline;
                 break;
-            case ProcessStatus.Source:
-                color = Color.ProcessSource;
-                break;
-            case ProcessStatus.Infected:
-                color = Color.ProcessInfected;
-                break;
-            case ProcessStatus.Offline:
-            default:
+            case PeerStatus.Offline:
                 color = Color.ProcessOffline;
                 break;
+            case PeerStatus.Infected:
+                color = Color.ProcessInfected;
+                break;
+            case PeerStatus.Removed:
+                color = Color.ProcessRemoved;
+                break;
+            default:
+                console.log(`unknown status ${status}`);
         }
         document.getElementById(pid + "circle").setAttributeNS(null, "fill", color);
     }

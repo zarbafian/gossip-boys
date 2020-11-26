@@ -57,14 +57,14 @@ class Process implements MessageBusSubscriber {
         for(let pid of this.incomingPeers) {
             this.requestPeerDisconnection(pid);
         }
-        networkController.links.removeByProcess(this.id);
+        network.links.removeByProcess(this.id);
         this.outgoingPeers = [];
         this.incomingPeers = [];
     }
 
     setStatus(status: ProcessStatus) {
         this.status = status;
-        svgManager.setProcessStatus(this.id, this.status);
+        //svgManager.setProcessStatus(this.id, this.status);
     }
 
     disconnectFromPeer(pid: number) {
@@ -91,13 +91,13 @@ class Process implements MessageBusSubscriber {
 
     requestPeerDisconnection(pid: number) {
         // disconnect from remote side
-        networkController.processes[pid].onPeerDisconnectionRequest(this.id);
+        network.processes[pid].onPeerDisconnectionRequest(this.id);
         // disconnect from my side
         this.disconnectFromPeer(pid);
     }
 
     async requestPeerConnection(pid: number): Promise<boolean> {
-        let success: boolean = await networkController.processes[pid].onPeerConnectionRequest(this.id);
+        let success: boolean = await network.processes[pid].onPeerConnectionRequest(this.id);
         if(success) {
             this.outgoingPeers.push(pid);
             return true;
@@ -105,14 +105,16 @@ class Process implements MessageBusSubscriber {
         return false;
     }
 
+    /*
     broadcast(message: Message) {
         if(message.epidemic) {
             this.setStatus(ProcessStatus.Infected);
         }
         this.gossipedMessages[message.id] = message;
-        let peerCount = networkController.broadcast(this.id, message);
+        let peerCount = network.broadcast(this.id, message);
         this.sentMessagesCount[message.id] = peerCount;
     }
+    */
     getHopCount(messageId: string): number {
         if(messageId in this.gossipedMessages) {
             return this.gossipedMessages[messageId].hops;
@@ -136,24 +138,24 @@ class Process implements MessageBusSubscriber {
                 let copy = message.clone();
                 copy.gossipers.push(this.id);
                 copy.hops = copy.hops + 1;
-                networkController.gossip(this.id, copy);
+                network.gossip(this.id, copy);
                 this.gossipedMessages[copy.id] = copy;
             }
             */
         }
     }
-
+/*
     randomGossip(message: Message) {
         this.setStatus(ProcessStatus.Infected);
-        let onlineProcesses = networkController.getProcessesByStatus(ProcessStatus.Online, true);
+        let onlineProcesses = network.getProcessesByStatus(ProcessStatus.Online, true);
         for(let pid of onlineProcesses) {
             if(!this.gossipedPeers[message.id]) {
-                networkController.send(networkController.processes[this.id], [networkController.processes[pid]], message);
+                network.send(network.processes[this.id], [network.processes[pid]], message);
                 this.gossipedPeers[message.id] = [pid];
                 break;
             }
             else if(!this.gossipedPeers[message.id].includes(pid)){
-                networkController.send(networkController.processes[this.id], [networkController.processes[pid]], message);
+                network.send(network.processes[this.id], [network.processes[pid]], message);
                 this.gossipedPeers[message.id].push(pid);
                 break;
             }
@@ -164,4 +166,5 @@ class Process implements MessageBusSubscriber {
         this.gossipedMessages[message.id] = message;
         this.sentMessagesCount[message.id] = (this.sentMessagesCount[message.id] || 0) + 1;
     }
+    */
 }

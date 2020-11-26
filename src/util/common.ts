@@ -13,6 +13,11 @@ namespace Html {
     export const displayLinks = "displayLinks";
     export const displayMessages = "displayMessages";
     export const simulationSpeed = "simulationSpeed";
+    
+    export const samplingParamT = "spt";
+    export const samplingParamC = "spc";
+    export const samplingParamH = "sph";
+    export const samplingParamS = "sps";
 }
 
 enum MouseButton {
@@ -23,10 +28,9 @@ enum MouseButton {
 
 enum Color {
     ProcessOffline = "#FFFFFF",
-    ProcessStarting = "#dd9966",
     ProcessOnline = "#44ff44",
-    ProcessSource = "#ff4444",
     ProcessInfected = "#2222ff",
+    ProcessRemoved = "#ff4444",
     Message = "#4444ff",
     LinkDefault = "#000000",
 }
