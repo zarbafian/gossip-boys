@@ -88,9 +88,6 @@ class Process {
         return 0;
     }
     onMessage(message) {
-        if (message.epidemic) {
-            this.setStatus(ProcessStatus.Infected);
-        }
     }
 }
 //# sourceMappingURL=process.js.map

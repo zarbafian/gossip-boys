@@ -51,6 +51,14 @@ class Simulation {
             }
         }
     }
+    infect(pid) {
+        if (this.peerMap[pid]) {
+            let peer = this.peerMap[pid];
+            if (peer.running) {
+                peer.startInfection();
+            }
+        }
+    }
     async start() {
         console.log('Starting simulation');
         shuffleArray(this.offlinePeers);

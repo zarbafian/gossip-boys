@@ -33,7 +33,8 @@ enum Color {
     ProcessOnline = "#44ff44",
     ProcessInfected = "#2222ff",
     ProcessRemoved = "#ff4444",
-    Message = "#4444ff",
+    MessageSampling = "#44ff44",
+    MessageInfected = "#4444ff",
     LinkDefault = "#000000",
 }
 

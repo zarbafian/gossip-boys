@@ -31,7 +31,8 @@ class SvgManager {
         };
         let rightClickHandler = (event) => {
             event.preventDefault();
-            console.log(`clicked: id=${event.target}`);
+            let pid = this.parseProcessId(event.target.id);
+            simulation.infect(pid);
         };
         svg.addEventListener('mouseup', leftClickHandler);
         svg.addEventListener('contextmenu', rightClickHandler);
@@ -132,7 +133,7 @@ class SvgManager {
     send(process, targets, message) {
         for (let target of targets) {
             let msgId = "msgFROM" + process.id + "TO" + target.id;
-            let svgElement = this.newMessage(msgId, process.position, Color.Message);
+            let svgElement = this.newMessage(msgId, process.position, message.epidemic ? Color.MessageInfected : Color.MessageSampling);
             let senderPositionScreen = this.cartesianToScreen(process.position);
             let targetPositionScreen = this.cartesianToScreen(target.position);
             let d = distance(process.position, target.position);

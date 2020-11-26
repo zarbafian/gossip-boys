@@ -63,11 +63,17 @@ class Peer {
                     this.view.moveOldestToEnd();
                     Array.prototype.push.apply(buffer, this.view.getHead());
                     let message = Message.new(MessageType.Pull, this.id);
+                    if (this.status == PeerStatus.Infected) {
+                        message.epidemic = true;
+                    }
                     message.payload = buffer;
                     network.send(this, [simulation.peerMap[message.sender]], message);
                 }
                 this.view.select(message.payload);
                 this.view.increaseAge();
+                if (message.epidemic) {
+                    this.setStatus(PeerStatus.Infected);
+                }
                 this.updateLinks();
                 break;
             case MessageType.Pull:
@@ -76,6 +82,9 @@ class Peer {
                     this.updateLinks();
                 }
                 this.view.increaseAge();
+                if (message.epidemic) {
+                    this.setStatus(PeerStatus.Infected);
+                }
                 break;
             default:
                 console.error(`unhandled message type : ${message.type}`);
@@ -102,6 +111,9 @@ class Peer {
                 this.view.moveOldestToEnd();
                 Array.prototype.push.apply(buffer, this.view.getHead());
                 let message = Message.new(MessageType.Push, this.id);
+                if (this.status == PeerStatus.Infected) {
+                    message.epidemic = true;
+                }
                 message.payload = buffer;
                 network.send(this, [simulation.peerMap[peerData.id]], message);
             }
@@ -114,6 +126,9 @@ class Peer {
         else {
             console.log(`Peer ${this.id} has no peers for PUSH`);
         }
+    }
+    startInfection() {
+        this.setStatus(PeerStatus.Infected);
     }
     async stop() {
         this.running = false;

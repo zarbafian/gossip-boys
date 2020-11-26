@@ -55,6 +55,7 @@ class Message {
         this.id = id;
         this.type = type;
         this.sender = sender;
+        this.epidemic = false;
     }
     static new(type, from) {
         let messageId = Message.nextId.toString();

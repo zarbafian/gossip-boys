@@ -131,9 +131,9 @@ class Process implements MessageBusSubscriber {
     onMessage(message: Message): void {
         //console.log(`process ${this.id} received message (id=${message.id}, sender=${message.sender}, gossiper=${message.gossipers[message.gossipers.length-1]}, hops=${message.hops}) from ${message.sender}`);
 
+        /*
         if(message.epidemic) {
             this.setStatus(ProcessStatus.Infected);
-            /*
             if(!Object.keys(this.gossipedMessages).includes(message.id)) {
                 let copy = message.clone();
                 copy.gossipers.push(this.id);
@@ -141,8 +141,8 @@ class Process implements MessageBusSubscriber {
                 network.gossip(this.id, copy);
                 this.gossipedMessages[copy.id] = copy;
             }
-            */
         }
+           */
     }
 /*
     randomGossip(message: Message) {

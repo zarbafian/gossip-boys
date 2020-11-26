@@ -44,13 +44,15 @@ class SvgManager {
         let leftClickHandler = (event: any) => {
             if(event.button == MouseButton.Left) {
                 let pid = this.parseProcessId(event.target.id);
-                //console.log(`clicked: pid=${pid}`);
+                //console.log(`left clicked: pid=${pid}`);
                 simulation.toggleProcess(pid);
             }
         };
-        let rightClickHandler = (event: MouseEvent) => {
+        let rightClickHandler = (event: any) => {
             event.preventDefault();
-            console.log(`clicked: id=${event.target}`);
+            let pid = this.parseProcessId(event.target.id);
+            //console.log(`right clicked: pid=${pid}`);
+            simulation.infect(pid);
         };
 
         svg.addEventListener('mouseup', leftClickHandler);
@@ -197,7 +199,7 @@ class SvgManager {
     send(process: Peer, targets: Peer[], message: Message) {
         for (let target of targets) {
             let msgId = "msgFROM" + process.id + "TO" + target.id;
-            let svgElement = this.newMessage(msgId, process.position, Color.Message);
+            let svgElement = this.newMessage(msgId, process.position, message.epidemic ? Color.MessageInfected : Color.MessageSampling);
             let senderPositionScreen = this.cartesianToScreen(process.position);
             let targetPositionScreen = this.cartesianToScreen(target.position);
 
