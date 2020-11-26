@@ -15,6 +15,8 @@ class Simulation {
     offlinePeers: Peer[] = [];
     peerMap: { [pid: number]: Peer } = {};
 
+    push: boolean = true;
+    pull: boolean = true;
     T: number = 1000;
     c: number = 30;
     H: number = 2;

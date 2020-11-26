@@ -10,7 +10,7 @@ class PeerData {
 class PeerSamplingService {
 
     id: number;
-    private peers: PeerData[];
+    peers: PeerData[];
     //private peers: { [pid: string]: PeerData };
     
     init(id: number) {
@@ -36,7 +36,7 @@ class PeerSamplingService {
 
     moveOldestToEnd() {
         let sorted = this.peers.slice(0);
-        sorted.sort((a, b) => b.age - a.age);
+        sorted.sort((a, b) => a.age - b.age);
         
         if(sorted.length > simulation.H) {
             // the ids of peers moved to the end
@@ -68,9 +68,57 @@ class PeerSamplingService {
     }
 
     select(buffer: PeerData[]) {
-        // TODO
-        Array.prototype.push.apply(this.peers, buffer.slice(0, 3));
-        //this.peers = buffer.slice(0, 3);
+
+        //let peerData = this.getPeers().map(p => `( ${p.id}@${p.age} )`).join(', ');
+        //let bufferData = buffer.slice(0).map(p => `( ${p.id}@${p.age} )`).join(', ');
+        //console.log(`[${this.id}] peerData=${peerData}, buffer=${bufferData}`);
+
+        // merge view and buffer
+        Array.prototype.push.apply(this.peers, buffer);
+
+        // remove duplicates
+        let map: { [pid: number]: PeerData } = {};
+        this.peers.forEach(peer => {
+            if(map.hasOwnProperty(peer.id)) {
+                if(map[peer.id].age > peer.age) {
+                    // duplicate and newer: replace
+                    map[peer.id] = peer;
+                }
+                else {
+                    // duplicate and older: discard
+                }
+            }
+            else {
+                // unique: keep
+                map[peer.id] = peer;
+            }
+        });
+        this.peers = Object.values(map);
+
+        // remove old items
+        let oldRemovalCount = Math.min(simulation.H, this.peers.length - simulation.c);
+        let sorted = this.peers.slice(0);
+        sorted.sort((a, b) => a.age - b.age);
+        let idsToRemove = sorted.slice(sorted.length - oldRemovalCount).map(peerData => peerData.id);
+        this.peers = this.peers.filter(peerData => !idsToRemove.includes(peerData.id));
+
+        // remove head
+        let headRemovalCount = Math.min(simulation.S, this.peers.length - simulation.c);
+        this.peers.splice(0, headRemovalCount);
+
+        // remove at random
+        let randomRemovalCount = this.peers.length - simulation.c;
+        for(let i=0; i < randomRemovalCount; i++) {
+            let removalIndex = getRandomInt(this.peers.length);
+            this.peers.splice(removalIndex, 1);
+        }
+
+        //let newPeerData = this.getPeers().map(p => `( ${p.id}@${p.age} )`).join(', ');
+        //console.log(`[${this.id}] newPeerData=${newPeerData}`);
+    }
+
+    increaseAge() {
+        this.peers.forEach(peer => peer.age++);
     }
 
     getPeers(): PeerData[] {

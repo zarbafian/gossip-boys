@@ -65,40 +65,46 @@ class MessageBus {
     }
 }
 
+enum MessageType {
+    Push = 'Push',
+    Pull = 'Pull',
+}
+
 class Message {
     static nextId: number = 1;
     
     id: string;
-    value: string;
+    type: MessageType;
     sender: number;
+
     gossipers: number[];
-    
     epidemic: boolean;
     hops: number;
-
     payload: any;
 
-    private constructor(id: string, value: string, sender: number, gossiper: number, broadcast: boolean) {
+    private constructor(id: string, type: MessageType, sender: number) {
         this.id = id;
-        this.value = value;
+        this.type = type;
         this.sender = sender;
-        this.gossipers = [];
-        this.gossipers.push(gossiper);
-        this.epidemic = broadcast;
-        this.hops = 1;
+        //this.gossipers = [];
+        //this.gossipers.push(gossiper);
+        //this.epidemic = broadcast;
+        //this.hops = 1;
     }
 
+    /*
     clone(): Message {
-        let copy = new Message(this.id, this.value, this.sender, this.sender, this.epidemic);
+        let copy = new Message(this.id, this.type, this.sender, this.sender, this.epidemic);
         copy.gossipers = this.gossipers.slice(0);
         copy.hops = this.hops;
         return copy;
     }
+    */
 
-    static new(data: string, from: number, broadcast: boolean) {
+    static new(type: MessageType, from: number) {
         let messageId = Message.nextId.toString();
         Message.nextId++;
-        let message = new Message(messageId, data, from, from, broadcast);
+        let message = new Message(messageId, type, from);
         return message;
     }
 }

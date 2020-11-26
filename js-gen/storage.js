@@ -7,6 +7,8 @@ var StorageKey;
     StorageKey.simulationSpeed = "simulationSpeed";
     StorageKey.outgoingPeers = "outgoingPeers";
     StorageKey.incomingPeers = "incomingPeers";
+    StorageKey.samplingParamPush = "spPush";
+    StorageKey.samplingParamPull = "spPull";
     StorageKey.samplingParamT = "spt";
     StorageKey.samplingParamC = "spc";
     StorageKey.samplingParamH = "sph";
@@ -20,6 +22,9 @@ function saveSettings() {
     localStorage.setItem(StorageKey.simulationSpeed, simulation.speed.toString());
     localStorage.setItem(StorageKey.outgoingPeers, simulation.outgoingPeers.toString());
     localStorage.setItem(StorageKey.incomingPeers, simulation.incomingPeers.toString());
+    localStorage.setItem(StorageKey.samplingParamPush, simulation.push.toString());
+    localStorage.setItem(StorageKey.samplingParamPull, simulation.pull.toString());
+    localStorage.setItem(StorageKey.samplingParamT, simulation.T.toString());
     localStorage.setItem(StorageKey.samplingParamT, simulation.T.toString());
     localStorage.setItem(StorageKey.samplingParamC, simulation.c.toString());
     localStorage.setItem(StorageKey.samplingParamH, simulation.H.toString());
@@ -35,6 +40,8 @@ function loadSettings() {
         simulation.outgoingPeers = parseInt(localStorage.getItem(StorageKey.outgoingPeers));
         simulation.incomingPeers = parseInt(localStorage.getItem(StorageKey.incomingPeers));
         simulation.speed = parseInt(localStorage.getItem(StorageKey.simulationSpeed));
+        simulation.push = localStorage.getItem(StorageKey.samplingParamPush) == 'true';
+        simulation.pull = localStorage.getItem(StorageKey.samplingParamPull) == 'true';
         simulation.T = parseInt(localStorage.getItem(StorageKey.samplingParamT));
         simulation.c = parseInt(localStorage.getItem(StorageKey.samplingParamC));
         simulation.H = parseInt(localStorage.getItem(StorageKey.samplingParamH));

@@ -15,34 +15,39 @@ class Peer {
         this.topics = ['broadcast'];
         this.topics.push(this.id.toString());
         this.view = new PeerSamplingService();
+        this.links = [];
     }
     init() {
         for (let topic of this.topics) {
             MessageBus.getInstance().subscribe(this, topic);
         }
         this.view.init(this.id);
-        for (let peerData of this.view.getPeers()) {
-            this.connectToPeer(peerData.id);
+        if (simulation.displayLinks) {
+            this.createLinks();
         }
     }
-    connectToPeer(pid) {
-        let id1 = this.id;
-        let id2 = pid;
-        let link = new Link(id1, id2);
-        network.links.addLink(link);
+    updateLinks() {
         if (simulation.displayLinks) {
-            svgManager.createLink(toLinkId(id1, id2), simulation.peerMap[link.from].position, simulation.peerMap[link.to].position);
+            this.removeLinks();
+            this.createLinks();
         }
+    }
+    createLinks() {
+        this.view.getPeers().forEach(peerData => this.addLink(peerData.id));
+    }
+    removeLinks() {
+        this.links.forEach(link => svgManager.removeLink(link));
+        this.links.splice(0);
+    }
+    addLink(pid) {
+        let link = new Link(this.id, pid);
+        this.links.push(link);
+        svgManager.createLink(toLinkId(link.from, link.to), simulation.peerMap[link.from].position, simulation.peerMap[link.to].position);
     }
     drop() {
-        for (let topic of this.topics) {
-            MessageBus.getInstance().unsubscribe(this, topic);
-        }
-        this.topics = [];
-        let removedLinks = network.links.removeByProcess(this.id);
-        if (simulation.displayLinks) {
-            removedLinks.forEach(link => svgManager.removeLink(link));
-        }
+        this.topics.forEach(topic => MessageBus.getInstance().unsubscribe(this, topic));
+        this.topics.splice(0);
+        this.removeLinks();
         this.setStatus(PeerStatus.Offline);
     }
     setStatus(status) {
@@ -50,15 +55,31 @@ class Peer {
         svgManager.setProcessStatus(this.id, this.status);
     }
     onMessage(message) {
-        console.log(`process ${this.id} received message (id=${message.id}, sender=${message.sender}, gossiper=${message.gossipers[message.gossipers.length - 1]}, hops=${message.hops})`);
-        if (message.value == 'swap') {
-            this.view.select(message.payload);
-            let removedLinks = network.links.removeByProcess(this.id);
-            if (simulation.displayLinks) {
-            }
-            for (let peerData of this.view.getPeers()) {
-                this.connectToPeer(peerData.id);
-            }
+        switch (message.type) {
+            case MessageType.Push:
+                if (simulation.pull) {
+                    let buffer = [new PeerData(this.id, 0)];
+                    this.view.permute();
+                    this.view.moveOldestToEnd();
+                    Array.prototype.push.apply(buffer, this.view.getHead());
+                    let message = Message.new(MessageType.Pull, this.id);
+                    message.payload = buffer;
+                    network.send(this, [simulation.peerMap[message.sender]], message);
+                }
+                this.view.select(message.payload);
+                this.view.increaseAge();
+                this.updateLinks();
+                break;
+            case MessageType.Pull:
+                if (simulation.pull) {
+                    this.view.select(message.payload);
+                    this.updateLinks();
+                }
+                this.view.increaseAge();
+                break;
+            default:
+                console.error(`unhandled message type : ${message.type}`);
+                break;
         }
     }
     async start() {
@@ -68,21 +89,27 @@ class Peer {
         this.stopped = false;
         while (this.running) {
             await sleep(simulation.T);
-            await this.push();
+            await this.active();
         }
         this.stopped = true;
     }
-    async push() {
+    async active() {
         let peerData = this.view.selectPeer();
         if (peerData != null) {
-            console.log(`Peer ${this.id} selected ${peerData.id} for PUSH`);
-            let buffer = [new PeerData(this.id, 0)];
-            this.view.permute();
-            this.view.moveOldestToEnd();
-            Array.prototype.push.apply(buffer, this.view.getHead());
-            let message = Message.new('swap', this.id, false);
-            message.payload = buffer;
-            network.send(this, [simulation.peerMap[peerData.id]], message);
+            if (simulation.push) {
+                let buffer = [new PeerData(this.id, 0)];
+                this.view.permute();
+                this.view.moveOldestToEnd();
+                Array.prototype.push.apply(buffer, this.view.getHead());
+                let message = Message.new(MessageType.Push, this.id);
+                message.payload = buffer;
+                network.send(this, [simulation.peerMap[peerData.id]], message);
+            }
+            else {
+                let message = Message.new(MessageType.Pull, this.id);
+                message.payload = [];
+                network.send(this, [simulation.peerMap[peerData.id]], message);
+            }
         }
         else {
             console.log(`Peer ${this.id} has no peers for PUSH`);

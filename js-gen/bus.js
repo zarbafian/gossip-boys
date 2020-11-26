@@ -45,26 +45,21 @@ class MessageBus {
     }
 }
 MessageBus.instance = null;
+var MessageType;
+(function (MessageType) {
+    MessageType["Push"] = "Push";
+    MessageType["Pull"] = "Pull";
+})(MessageType || (MessageType = {}));
 class Message {
-    constructor(id, value, sender, gossiper, broadcast) {
+    constructor(id, type, sender) {
         this.id = id;
-        this.value = value;
+        this.type = type;
         this.sender = sender;
-        this.gossipers = [];
-        this.gossipers.push(gossiper);
-        this.epidemic = broadcast;
-        this.hops = 1;
     }
-    clone() {
-        let copy = new Message(this.id, this.value, this.sender, this.sender, this.epidemic);
-        copy.gossipers = this.gossipers.slice(0);
-        copy.hops = this.hops;
-        return copy;
-    }
-    static new(data, from, broadcast) {
+    static new(type, from) {
         let messageId = Message.nextId.toString();
         Message.nextId++;
-        let message = new Message(messageId, data, from, from, broadcast);
+        let message = new Message(messageId, type, from);
         return message;
     }
 }

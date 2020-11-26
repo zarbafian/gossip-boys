@@ -14,6 +14,8 @@ namespace Html {
     export const displayMessages = "displayMessages";
     export const simulationSpeed = "simulationSpeed";
     
+    export const samplingParamPush = "spPush";
+    export const samplingParamPull = "spPull";
     export const samplingParamT = "spt";
     export const samplingParamC = "spc";
     export const samplingParamH = "sph";

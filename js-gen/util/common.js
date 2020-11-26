@@ -12,6 +12,8 @@ var Html;
     Html.displayLinks = "displayLinks";
     Html.displayMessages = "displayMessages";
     Html.simulationSpeed = "simulationSpeed";
+    Html.samplingParamPush = "spPush";
+    Html.samplingParamPull = "spPull";
     Html.samplingParamT = "spt";
     Html.samplingParamC = "spc";
     Html.samplingParamH = "sph";

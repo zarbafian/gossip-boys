@@ -11,6 +11,8 @@ class Simulation {
         this.onlinePeers = [];
         this.offlinePeers = [];
         this.peerMap = {};
+        this.push = true;
+        this.pull = true;
         this.T = 1000;
         this.c = 30;
         this.H = 2;

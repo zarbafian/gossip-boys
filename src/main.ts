@@ -2,6 +2,29 @@ var network: Network;
 var svgManager: SvgManager;
 var simulation: Simulation;
 
+function getTestView(): PeerSamplingService {
+    let view = new PeerSamplingService();
+    view.init(123);
+    view.peers.push(new PeerData(11, 111));
+    view.peers.push(new PeerData(33, 33));
+    view.peers.push(new PeerData(88, 88));
+    view.peers.push(new PeerData(77, 777));
+    view.peers.push(new PeerData(99, 99));
+    view.peers.push(new PeerData(55, 555));
+    return view;
+}
+
+function getTestBuffer(): PeerData[] {
+    let buffer = [];
+    buffer.push(new PeerData(77, 77));
+    buffer.push(new PeerData(22, 22));
+    buffer.push(new PeerData(44, 44));
+    buffer.push(new PeerData(66, 66));
+    buffer.push(new PeerData(88, 8));
+    buffer.push(new PeerData(11, 11));
+    return buffer;
+}
+
 window.addEventListener("keyup", (event: any) => {
     //  console.log(event.keyCode);
     switch(event.keyCode) {
@@ -49,35 +72,12 @@ async function startStop() {
 }
 
 function setupContols() {
-    // initial number of processes
     setupTextInput(Html.initialProcesses, () => simulation.initialProcessCount.toString(), (value: number) => simulation.initialProcessCount = value);
-    
-    // number of processes added each round
     setupTextInput(Html.joiningProcesses, () => simulation.joiningProcessCount.toString(), (value: number) => simulation.joiningProcessCount = value);
-
-    // number of outgoing processes
     setupTextInput(Html.outgoingPeers, () => simulation.outgoingPeers.toString(), (value: number) => simulation.outgoingPeers = value);
-
-    // number of incoming processes
     setupTextInput(Html.incomingPeers, () => simulation.incomingPeers.toString(), (value: number) => simulation.incomingPeers = value);
-
-    // display of links
-    let linksCheckBox = (document.getElementById(Html.displayLinks) as HTMLInputElement);
-    linksCheckBox.checked = simulation.displayLinks;
-    linksCheckBox.addEventListener("change", (event: any) => {
-        simulation.displayLinks = (document.getElementById(Html.displayLinks) as HTMLInputElement).checked;
-        console.log(`display of links is now ${simulation.displayLinks?'enabled':'disabled'}`);
-        saveSettings();
-    });
-
-    // display of messages
-    let msgCheckBox = (document.getElementById(Html.displayMessages) as HTMLInputElement);
-    msgCheckBox.checked = simulation.displayMessages;
-    msgCheckBox.addEventListener("change", (event: any) => {
-        simulation.displayMessages = (document.getElementById(Html.displayMessages) as HTMLInputElement).checked;
-        console.log(`display of messages is now ${simulation.displayMessages?'enabled':'disabled'}`);
-        saveSettings();
-    });
+    setupCheckBoxInput(Html.displayLinks, () => simulation.displayLinks, (value: boolean) => simulation.displayLinks = value);
+    setupCheckBoxInput(Html.displayMessages, () => simulation.displayMessages, (value: boolean) => simulation.displayMessages = value);
 
     // simulation speed
     let speedSlider = (document.getElementById(Html.simulationSpeed) as HTMLInputElement);
@@ -93,6 +93,8 @@ function setupContols() {
     });
 
     // peer sampling algorithm
+    setupCheckBoxInput(Html.samplingParamPush, () => simulation.push, (value: boolean) => simulation.push = value);
+    setupCheckBoxInput(Html.samplingParamPull, () => simulation.pull, (value: boolean) => simulation.pull = value);
     setupTextInput(Html.samplingParamT, () => simulation.T.toString(), (value: number) => simulation.T = value);
     setupTextInput(Html.samplingParamC, () => simulation.c.toString(), (value: number) => simulation.c = value);
     setupTextInput(Html.samplingParamH, () => simulation.H.toString(), (value: number) => simulation.H = value);
@@ -110,6 +112,17 @@ function setupTextInput(htmlId: string, initalValue: () => string, setterCallbac
             console.log(`updated ${htmlId} to ${parsedValue}`);
             saveSettings();
         }
+    });
+}
+
+function setupCheckBoxInput(htmlId: string, initalValue: () => boolean, setterCallback: (value: boolean) => void) {
+    let checkBox = (document.getElementById(htmlId) as HTMLInputElement);
+    checkBox.checked = initalValue();
+    checkBox.addEventListener("change", (event: Event) => {
+        let cbValue = (event.target as HTMLInputElement).checked;
+        setterCallback(cbValue);
+        console.log(`updated ${htmlId} to ${cbValue}`);
+        saveSettings();
     });
 }
 

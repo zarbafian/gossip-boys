@@ -1,6 +1,27 @@
 var network;
 var svgManager;
 var simulation;
+function getTestView() {
+    let view = new PeerSamplingService();
+    view.init(123);
+    view.peers.push(new PeerData(11, 111));
+    view.peers.push(new PeerData(33, 33));
+    view.peers.push(new PeerData(88, 88));
+    view.peers.push(new PeerData(77, 777));
+    view.peers.push(new PeerData(99, 99));
+    view.peers.push(new PeerData(55, 555));
+    return view;
+}
+function getTestBuffer() {
+    let buffer = [];
+    buffer.push(new PeerData(77, 77));
+    buffer.push(new PeerData(22, 22));
+    buffer.push(new PeerData(44, 44));
+    buffer.push(new PeerData(66, 66));
+    buffer.push(new PeerData(88, 8));
+    buffer.push(new PeerData(11, 11));
+    return buffer;
+}
 window.addEventListener("keyup", (event) => {
     switch (event.keyCode) {
         case Key.Space:
@@ -41,20 +62,8 @@ function setupContols() {
     setupTextInput(Html.joiningProcesses, () => simulation.joiningProcessCount.toString(), (value) => simulation.joiningProcessCount = value);
     setupTextInput(Html.outgoingPeers, () => simulation.outgoingPeers.toString(), (value) => simulation.outgoingPeers = value);
     setupTextInput(Html.incomingPeers, () => simulation.incomingPeers.toString(), (value) => simulation.incomingPeers = value);
-    let linksCheckBox = document.getElementById(Html.displayLinks);
-    linksCheckBox.checked = simulation.displayLinks;
-    linksCheckBox.addEventListener("change", (event) => {
-        simulation.displayLinks = document.getElementById(Html.displayLinks).checked;
-        console.log(`display of links is now ${simulation.displayLinks ? 'enabled' : 'disabled'}`);
-        saveSettings();
-    });
-    let msgCheckBox = document.getElementById(Html.displayMessages);
-    msgCheckBox.checked = simulation.displayMessages;
-    msgCheckBox.addEventListener("change", (event) => {
-        simulation.displayMessages = document.getElementById(Html.displayMessages).checked;
-        console.log(`display of messages is now ${simulation.displayMessages ? 'enabled' : 'disabled'}`);
-        saveSettings();
-    });
+    setupCheckBoxInput(Html.displayLinks, () => simulation.displayLinks, (value) => simulation.displayLinks = value);
+    setupCheckBoxInput(Html.displayMessages, () => simulation.displayMessages, (value) => simulation.displayMessages = value);
     let speedSlider = document.getElementById(Html.simulationSpeed);
     speedSlider.value = simulation.speed.toString();
     updateSliderText();
@@ -66,6 +75,8 @@ function setupContols() {
         updateSliderText();
         saveSettings();
     });
+    setupCheckBoxInput(Html.samplingParamPush, () => simulation.push, (value) => simulation.push = value);
+    setupCheckBoxInput(Html.samplingParamPull, () => simulation.pull, (value) => simulation.pull = value);
     setupTextInput(Html.samplingParamT, () => simulation.T.toString(), (value) => simulation.T = value);
     setupTextInput(Html.samplingParamC, () => simulation.c.toString(), (value) => simulation.c = value);
     setupTextInput(Html.samplingParamH, () => simulation.H.toString(), (value) => simulation.H = value);
@@ -82,6 +93,16 @@ function setupTextInput(htmlId, initalValue, setterCallback) {
             console.log(`updated ${htmlId} to ${parsedValue}`);
             saveSettings();
         }
+    });
+}
+function setupCheckBoxInput(htmlId, initalValue, setterCallback) {
+    let checkBox = document.getElementById(htmlId);
+    checkBox.checked = initalValue();
+    checkBox.addEventListener("change", (event) => {
+        let cbValue = event.target.checked;
+        setterCallback(cbValue);
+        console.log(`updated ${htmlId} to ${cbValue}`);
+        saveSettings();
     });
 }
 function updateSliderText() {

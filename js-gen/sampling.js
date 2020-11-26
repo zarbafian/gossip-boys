@@ -25,7 +25,7 @@ class PeerSamplingService {
     }
     moveOldestToEnd() {
         let sorted = this.peers.slice(0);
-        sorted.sort((a, b) => b.age - a.age);
+        sorted.sort((a, b) => a.age - b.age);
         if (sorted.length > simulation.H) {
             let endIds = [];
             for (let i = (sorted.length - simulation.H); i < sorted.length; i++) {
@@ -49,7 +49,36 @@ class PeerSamplingService {
         return this.peers.slice(0, simulation.c / 2 - 1);
     }
     select(buffer) {
-        Array.prototype.push.apply(this.peers, buffer.slice(0, 3));
+        Array.prototype.push.apply(this.peers, buffer);
+        let map = {};
+        this.peers.forEach(peer => {
+            if (map.hasOwnProperty(peer.id)) {
+                if (map[peer.id].age > peer.age) {
+                    map[peer.id] = peer;
+                }
+                else {
+                }
+            }
+            else {
+                map[peer.id] = peer;
+            }
+        });
+        this.peers = Object.values(map);
+        let oldRemovalCount = Math.min(simulation.H, this.peers.length - simulation.c);
+        let sorted = this.peers.slice(0);
+        sorted.sort((a, b) => a.age - b.age);
+        let idsToRemove = sorted.slice(sorted.length - oldRemovalCount).map(peerData => peerData.id);
+        this.peers = this.peers.filter(peerData => !idsToRemove.includes(peerData.id));
+        let headRemovalCount = Math.min(simulation.S, this.peers.length - simulation.c);
+        this.peers.splice(0, headRemovalCount);
+        let randomRemovalCount = this.peers.length - simulation.c;
+        for (let i = 0; i < randomRemovalCount; i++) {
+            let removalIndex = getRandomInt(this.peers.length);
+            this.peers.splice(removalIndex, 1);
+        }
+    }
+    increaseAge() {
+        this.peers.forEach(peer => peer.age++);
     }
     getPeers() {
         return this.peers.slice(0);

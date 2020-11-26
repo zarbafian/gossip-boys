@@ -12,6 +12,8 @@ namespace StorageKey {
     export const outgoingPeers = "outgoingPeers";
     export const incomingPeers = "incomingPeers";
     
+    export const samplingParamPush = "spPush";
+    export const samplingParamPull = "spPull";
     export const samplingParamT = "spt";
     export const samplingParamC = "spc";
     export const samplingParamH = "sph";
@@ -27,6 +29,9 @@ function saveSettings() {
     localStorage.setItem(StorageKey.outgoingPeers, simulation.outgoingPeers.toString());
     localStorage.setItem(StorageKey.incomingPeers, simulation.incomingPeers.toString());
     
+    localStorage.setItem(StorageKey.samplingParamPush, simulation.push.toString());
+    localStorage.setItem(StorageKey.samplingParamPull, simulation.pull.toString());
+    localStorage.setItem(StorageKey.samplingParamT, simulation.T.toString());
     localStorage.setItem(StorageKey.samplingParamT, simulation.T.toString());
     localStorage.setItem(StorageKey.samplingParamC, simulation.c.toString());
     localStorage.setItem(StorageKey.samplingParamH, simulation.H.toString());
@@ -44,6 +49,8 @@ function loadSettings() {
         simulation.incomingPeers = parseInt(localStorage.getItem(StorageKey.incomingPeers));
         simulation.speed = parseInt(localStorage.getItem(StorageKey.simulationSpeed));
         
+        simulation.push = localStorage.getItem(StorageKey.samplingParamPush) == 'true';
+        simulation.pull = localStorage.getItem(StorageKey.samplingParamPull) == 'true';
         simulation.T = parseInt(localStorage.getItem(StorageKey.samplingParamT));
         simulation.c = parseInt(localStorage.getItem(StorageKey.samplingParamC));
         simulation.H = parseInt(localStorage.getItem(StorageKey.samplingParamH));
