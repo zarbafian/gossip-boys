@@ -60,8 +60,6 @@ async function startStop() {
 function setupContols() {
     setupTextInput(Html.initialProcesses, () => simulation.initialProcessCount.toString(), (value) => simulation.initialProcessCount = value);
     setupTextInput(Html.joiningProcesses, () => simulation.joiningProcessCount.toString(), (value) => simulation.joiningProcessCount = value);
-    setupTextInput(Html.outgoingPeers, () => simulation.outgoingPeers.toString(), (value) => simulation.outgoingPeers = value);
-    setupTextInput(Html.incomingPeers, () => simulation.incomingPeers.toString(), (value) => simulation.incomingPeers = value);
     setupCheckBoxInput(Html.displayLinks, () => simulation.displayLinks, (value) => simulation.displayLinks = value);
     setupCheckBoxInput(Html.displayMessages, () => simulation.displayMessages, (value) => simulation.displayMessages = value);
     let speedSlider = document.getElementById(Html.simulationSpeed);

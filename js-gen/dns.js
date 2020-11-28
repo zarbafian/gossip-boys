@@ -10,7 +10,7 @@ class DnsService {
         return DnsService.instance;
     }
     getInitialPeers() {
-        return this.peers.slice(0, 1);
+        return this.peers.slice(0, 10);
     }
     registerPeer(pid) {
         this.peers.push(pid);

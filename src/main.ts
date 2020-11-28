@@ -74,8 +74,8 @@ async function startStop() {
 function setupContols() {
     setupTextInput(Html.initialProcesses, () => simulation.initialProcessCount.toString(), (value: number) => simulation.initialProcessCount = value);
     setupTextInput(Html.joiningProcesses, () => simulation.joiningProcessCount.toString(), (value: number) => simulation.joiningProcessCount = value);
-    setupTextInput(Html.outgoingPeers, () => simulation.outgoingPeers.toString(), (value: number) => simulation.outgoingPeers = value);
-    setupTextInput(Html.incomingPeers, () => simulation.incomingPeers.toString(), (value: number) => simulation.incomingPeers = value);
+    //setupTextInput(Html.outgoingPeers, () => simulation.outgoingPeers.toString(), (value: number) => simulation.outgoingPeers = value);
+    //setupTextInput(Html.incomingPeers, () => simulation.incomingPeers.toString(), (value: number) => simulation.incomingPeers = value);
     setupCheckBoxInput(Html.displayLinks, () => simulation.displayLinks, (value: boolean) => simulation.displayLinks = value);
     setupCheckBoxInput(Html.displayMessages, () => simulation.displayMessages, (value: boolean) => simulation.displayMessages = value);
 

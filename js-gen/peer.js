@@ -18,24 +18,34 @@ class Peer {
         this.links = [];
     }
     init() {
-        for (let topic of this.topics) {
-            MessageBus.getInstance().subscribe(this, topic);
-        }
+        this.topics.forEach(topic => MessageBus.getInstance().subscribe(this, topic));
         this.view.init(this.id);
-        if (simulation.displayLinks) {
-            this.createLinks();
+        this.refreshLinks();
+    }
+    drop() {
+        this.topics.forEach(topic => MessageBus.getInstance().unsubscribe(this, topic));
+        this.removeAllLinks();
+    }
+    refreshLinks() {
+        if (simulation.displayMessages) {
+            let actualLinks = this.view.getPeers().map(peer => peer.id);
+            let legacyLinks = this.links.map(link => link.to);
+            let shouldBeAdded = actualLinks.filter(pid => !legacyLinks.includes(pid));
+            let shouldBeDeleted = legacyLinks.filter(pid => !actualLinks.includes(pid));
+            shouldBeAdded.forEach(pid => this.addLink(pid));
+            shouldBeDeleted.forEach(pid => this.removeLink(pid));
         }
     }
-    updateLinks() {
-        if (simulation.displayLinks) {
-            this.removeLinks();
-            this.createLinks();
+    removeLink(pid) {
+        for (let i = 0; i < this.links.length; i++) {
+            if (this.links[i].to == pid) {
+                let link = this.links.splice(i, 1)[0];
+                svgManager.removeLink(link);
+                break;
+            }
         }
     }
-    createLinks() {
-        this.view.getPeers().forEach(peerData => this.addLink(peerData.id));
-    }
-    removeLinks() {
+    removeAllLinks() {
         this.links.forEach(link => svgManager.removeLink(link));
         this.links.splice(0);
     }
@@ -43,12 +53,6 @@ class Peer {
         let link = new Link(this.id, pid);
         this.links.push(link);
         svgManager.createLink(toLinkId(link.from, link.to), simulation.peerMap[link.from].position, simulation.peerMap[link.to].position);
-    }
-    drop() {
-        this.topics.forEach(topic => MessageBus.getInstance().unsubscribe(this, topic));
-        this.topics.splice(0);
-        this.removeLinks();
-        this.setStatus(PeerStatus.Offline);
     }
     setStatus(status) {
         this.status = status;
@@ -62,24 +66,24 @@ class Peer {
                     this.view.permute();
                     this.view.moveOldestToEnd();
                     Array.prototype.push.apply(buffer, this.view.getHead());
-                    let message = Message.new(MessageType.Pull, this.id);
+                    let resp = Message.new(MessageType.Pull, this.id);
                     if (this.status == PeerStatus.Infected) {
-                        message.epidemic = true;
+                        resp.epidemic = true;
                     }
-                    message.payload = buffer;
-                    network.send(this, [simulation.peerMap[message.sender]], message);
+                    resp.payload = buffer;
+                    network.send(this, [simulation.peerMap[message.sender]], resp);
                 }
                 this.view.select(message.payload);
                 this.view.increaseAge();
                 if (message.epidemic) {
                     this.setStatus(PeerStatus.Infected);
                 }
-                this.updateLinks();
+                this.refreshLinks();
                 break;
             case MessageType.Pull:
                 if (simulation.pull) {
                     this.view.select(message.payload);
-                    this.updateLinks();
+                    this.refreshLinks();
                 }
                 this.view.increaseAge();
                 if (message.epidemic) {
@@ -97,7 +101,7 @@ class Peer {
         this.running = true;
         this.stopped = false;
         while (this.running) {
-            await sleep(simulation.T);
+            await sleep(simulation.T + getRandomInt(simulation.T) / 2);
             await this.active();
         }
         this.stopped = true;
@@ -136,6 +140,7 @@ class Peer {
             await sleep(100);
         }
         this.drop();
+        this.setStatus(PeerStatus.Offline);
     }
 }
 //# sourceMappingURL=peer.js.map

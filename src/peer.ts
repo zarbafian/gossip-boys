@@ -29,34 +29,46 @@ class Peer implements MessageBusSubscriber {
     }
 
     private init() {
-        for(let topic of this.topics) {
-            MessageBus.getInstance().subscribe(this, topic);
-        }
+        // subscribe to topics
+        this.topics.forEach(topic => MessageBus.getInstance().subscribe(this, topic));
+
+        // initialize view
         this.view.init(this.id);
 
-        if(simulation.displayLinks) {
-            this.createLinks();
+        // display connections
+        this.refreshLinks();
+    }
+
+    private drop() {
+        // unsubscribe to topics
+        this.topics.forEach(topic => MessageBus.getInstance().unsubscribe(this, topic));
+
+        // remove connections
+        this.removeAllLinks();
+    }
+
+    refreshLinks() {
+        if(simulation.displayMessages) {
+            let actualLinks = this.view.getPeers().map(peer => peer.id);
+            let legacyLinks = this.links.map(link => link.to);
+            let shouldBeAdded = actualLinks.filter(pid => !legacyLinks.includes(pid));
+            let shouldBeDeleted = legacyLinks.filter(pid => !actualLinks.includes(pid));
+            shouldBeAdded.forEach(pid => this.addLink(pid));
+            shouldBeDeleted.forEach(pid => this.removeLink(pid));
         }
     }
 
-    updateLinks() {
-        if(simulation.displayLinks) {
-            this.removeLinks();
-            this.createLinks();
+    removeLink(pid: number) {
+        for(let i=0; i < this.links.length; i++) {
+            if(this.links[i].to == pid) {
+                let link = this.links.splice(i, 1)[0];
+                svgManager.removeLink(link);
+                break;
+            }
         }
     }
 
-    /**
-     * Create visual links between this peer and its connected peers.
-     */
-    createLinks() {
-        this.view.getPeers().forEach(peerData => this.addLink(peerData.id));
-    }
-
-    /**
-     * Remove visual links between this peer and its connected peers.
-     */
-    removeLinks() {
+    removeAllLinks() {
         this.links.forEach(link => svgManager.removeLink(link));
         this.links.splice(0);
     }
@@ -65,15 +77,6 @@ class Peer implements MessageBusSubscriber {
         let link = new Link(this.id, pid);
         this.links.push(link);
         svgManager.createLink(toLinkId(link.from, link.to), simulation.peerMap[link.from].position, simulation.peerMap[link.to].position);
-    }
-
-    private drop() {
-        this.topics.forEach(topic => MessageBus.getInstance().unsubscribe(this, topic));
-        this.topics.splice(0);
-
-        this.removeLinks();
-    
-        this.setStatus(PeerStatus.Offline);
     }
 
     setStatus(status: PeerStatus) {
@@ -99,14 +102,14 @@ class Peer implements MessageBusSubscriber {
                     this.view.moveOldestToEnd();
                     Array.prototype.push.apply(buffer, this.view.getHead());
 
-                    let message = Message.new(MessageType.Pull, this.id);
+                    let resp = Message.new(MessageType.Pull, this.id);
 
                     if(this.status == PeerStatus.Infected) {
-                        message.epidemic = true;
+                        resp.epidemic = true;
                     }
 
-                    message.payload = buffer;
-                    network.send(this, [ simulation.peerMap[message.sender]], message);
+                    resp.payload = buffer;
+                    network.send(this, [ simulation.peerMap[message.sender]], resp);
                 }
                 this.view.select(message.payload);
                 this.view.increaseAge();
@@ -117,15 +120,16 @@ class Peer implements MessageBusSubscriber {
                 }
 
                 // update display
-                this.updateLinks();
+                this.refreshLinks();
                 break;
+
                 case MessageType.Pull:
                     if(simulation.pull) {
                         // should I handle a pull: yes
                         this.view.select(message.payload);
                         
                         // update display
-                        this.updateLinks()
+                        this.refreshLinks()
                     }
                     this.view.increaseAge();
 
@@ -138,31 +142,15 @@ class Peer implements MessageBusSubscriber {
                 console.error(`unhandled message type : ${message.type}`);
                 break;
         }
-        /*
-        if(message.epidemic) {
-            this.setStatus(PeerStatus.Infected);
-            if(!Object.keys(this.gossipedMessages).includes(message.id)) {
-                let copy = message.clone();
-                copy.gossipers.push(this.id);
-                copy.hops = copy.hops + 1;
-                networkController.gossip(this.id, copy);
-                this.gossipedMessages[copy.id] = copy;
-            }
-        }
-        */
     }
 
     async start() {
-        
         this.init();
-
         this.setStatus(PeerStatus.Online);
         this.running = true;
         this.stopped = false;
         while(this.running) {
-
-            await sleep(simulation.T);
-
+            await sleep(simulation.T + getRandomInt(simulation.T) / 2);
             await this.active();
         }
         this.stopped = true;
@@ -209,5 +197,7 @@ class Peer implements MessageBusSubscriber {
             await sleep(100);
         }
         this.drop();
+
+        this.setStatus(PeerStatus.Offline);
     }
 }

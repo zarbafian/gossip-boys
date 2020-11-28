@@ -4,8 +4,8 @@ class Simulation {
     initialProcessCount: number = 100;
     joiningProcessCount: number = 10;
 
-    outgoingPeers: number = 12;
-    incomingPeers: number = 6;
+    //outgoingPeers: number = 12;
+    //incomingPeers: number = 6;
 
     displayLinks: boolean = true;
     displayMessages: boolean = true;
@@ -68,13 +68,18 @@ class Simulation {
     }
 
     async start() {
-        console.log('Starting simulation');
+        console.log('Starting simulation...');
         
         // select initial peers
         shuffleArray(this.offlinePeers);
         this.onlinePeers = this.offlinePeers.splice(0, this.initialProcessCount);
 
         // setup DNS with initial peers
+        /*
+        for(let i=0; i < Math.min(10, this.onlinePeers.length); i++) {
+            DnsService.getInstance().registerPeer(this.onlinePeers[i].id);
+        }
+        */
         DnsService.getInstance().registerPeer(this.onlinePeers[0].id);
 
         // start peers
@@ -82,10 +87,13 @@ class Simulation {
             p.start();
         }
 
-        console.log('Simulation started');
+        console.log('...simulation started');
     }
 
     async stop() {
+        console.log(`Stopping simulation...`);
+
+        // stop each peer
         this.onlinePeers.forEach(p => p.running = false);
         for(let p of this.onlinePeers) {
             await p.stop();
@@ -98,7 +106,7 @@ class Simulation {
         // clear DNS peers
         DnsService.getInstance().clearPeers();
 
-        console.log(`Simulation stopped`);
+        console.log(`...simulation stopped`);
     }
 
     generateNetwork(): Peer[] {

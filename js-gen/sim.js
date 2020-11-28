@@ -3,8 +3,6 @@ class Simulation {
         this.running = false;
         this.initialProcessCount = 100;
         this.joiningProcessCount = 10;
-        this.outgoingPeers = 12;
-        this.incomingPeers = 6;
         this.displayLinks = true;
         this.displayMessages = true;
         this.speed = 20;
@@ -60,16 +58,17 @@ class Simulation {
         }
     }
     async start() {
-        console.log('Starting simulation');
+        console.log('Starting simulation...');
         shuffleArray(this.offlinePeers);
         this.onlinePeers = this.offlinePeers.splice(0, this.initialProcessCount);
         DnsService.getInstance().registerPeer(this.onlinePeers[0].id);
         for (let p of this.onlinePeers) {
             p.start();
         }
-        console.log('Simulation started');
+        console.log('...simulation started');
     }
     async stop() {
+        console.log(`Stopping simulation...`);
         this.onlinePeers.forEach(p => p.running = false);
         for (let p of this.onlinePeers) {
             await p.stop();
@@ -77,7 +76,7 @@ class Simulation {
         }
         Array.prototype.push.apply(this.offlinePeers, this.onlinePeers.splice(0));
         DnsService.getInstance().clearPeers();
-        console.log(`Simulation stopped`);
+        console.log(`...simulation stopped`);
     }
     generateNetwork() {
         let creationProbability = 0.7;

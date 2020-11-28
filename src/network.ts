@@ -15,54 +15,10 @@ class Network {
         this.links = new Links();
     }
 
-    getProcessKeys(): number[] {
-        return Object.keys(this.processes).map(key => parseInt(key));
-    }
-
-    async startProcess(pid: number) {
-        //this.processes[pid].start();
-        //svgManager.setProcessStatus(pid, ProcessStatus.Starting);
-        
-        // subscribe to topics
-        this.processes[pid].init();
-
-        // connect to other peers
-        this.createOutgoingConnections(pid);
-
-        // update status
-        this.processes[pid].setStatus(ProcessStatus.Online);
-    }
-
-    async createOutgoingConnections(pid: number) {
-        let onlineProcesses = this.getProcessesByStatus(ProcessStatus.Online, true);
-        let currentIndex = 0;
-        let maxConnectionAttempts = this.processes[pid].maxOutgoingPeers * 2;
-        let attemps = 0;
-        while(this.processes[pid].outgoingPeers.length < this.processes[pid].maxOutgoingPeers && currentIndex < onlineProcesses.length) {
-            let peerPid = onlineProcesses[currentIndex];
-            let success: boolean = await this.processes[pid].requestPeerConnection(peerPid);
-            if(success) {
-                let id1 = pid;
-                let id2 = peerPid;
-                let link = new Link(id1, id2);
-                this.links.addLink(link);
-                let id = toLinkId(id1, id2);
-                if(simulation.displayLinks) {
-                    svgManager.createLink(id, this.processes[link.from].position, this.processes[link.to].position);
-                }
-            }
-            currentIndex++;
-            attemps++;
-            if (attemps >= maxConnectionAttempts) {
-                break;
-            }
-        }
-    }
-
+    /*
     stopProcess(pid: number) {
         this.processes[pid].drop();
     }
-/*
     // broadcast a message to all peers
     broadcast(pid: number, message: Message): number {
         let sender = this.processes[pid];
@@ -96,13 +52,14 @@ class Network {
             svgManager.send(sender, targets, message);
         }
         else {
-            await sleep(simulation.speed * 50);
+            await sleep((10/simulation.speed) * 50);
             for (let target of targets) {
                 MessageBus.getInstance().notify(message, target.id.toString());
             }
         }
     }
 
+    /*
     getProcessesByStatus(status: ProcessStatus, shuffle: boolean): number[] {
         let result = [];
         for(let pid in this.processes) {
@@ -115,4 +72,5 @@ class Network {
         }
         return result;
     }
+    */
 }

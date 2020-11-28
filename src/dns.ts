@@ -17,7 +17,8 @@ class DnsService {
     }
 
     getInitialPeers(): number[] {
-        return this.peers.slice(0, 1);
+        return this.peers.slice(0, 10);
+        //return this.peers.slice(0, 1);
     }
 
     registerPeer(pid: number) {

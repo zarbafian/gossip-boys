@@ -8,6 +8,7 @@ enum ProcessStatus {
 
 class Process implements MessageBusSubscriber {
     id: number;
+    /*
     position: Point;
     status: ProcessStatus;
 
@@ -105,7 +106,6 @@ class Process implements MessageBusSubscriber {
         return false;
     }
 
-    /*
     broadcast(message: Message) {
         if(message.epidemic) {
             this.setStatus(ProcessStatus.Infected);
@@ -114,7 +114,6 @@ class Process implements MessageBusSubscriber {
         let peerCount = network.broadcast(this.id, message);
         this.sentMessagesCount[message.id] = peerCount;
     }
-    */
     getHopCount(messageId: string): number {
         if(messageId in this.gossipedMessages) {
             return this.gossipedMessages[messageId].hops;
@@ -127,10 +126,11 @@ class Process implements MessageBusSubscriber {
         }
         return 0;
     }
-
+    */
+    
     onMessage(message: Message): void {
         //console.log(`process ${this.id} received message (id=${message.id}, sender=${message.sender}, gossiper=${message.gossipers[message.gossipers.length-1]}, hops=${message.hops}) from ${message.sender}`);
-
+        
         /*
         if(message.epidemic) {
             this.setStatus(ProcessStatus.Infected);
@@ -142,9 +142,9 @@ class Process implements MessageBusSubscriber {
                 this.gossipedMessages[copy.id] = copy;
             }
         }
-           */
+        */
     }
-/*
+    /*
     randomGossip(message: Message) {
         this.setStatus(ProcessStatus.Infected);
         let onlineProcesses = network.getProcessesByStatus(ProcessStatus.Online, true);
