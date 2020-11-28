@@ -49,6 +49,8 @@ var MessageType;
 (function (MessageType) {
     MessageType["Push"] = "Push";
     MessageType["Pull"] = "Pull";
+    MessageType["UpdatePush"] = "UpdatePush";
+    MessageType["UpdatePull"] = "UpdatePull";
 })(MessageType || (MessageType = {}));
 class Message {
     constructor(id, type, sender) {
@@ -56,7 +58,7 @@ class Message {
         this.type = type;
         this.sender = sender;
         this.epidemic = false;
-        this.quarters = [];
+        this.parts = [];
     }
     static new(type, from) {
         let messageId = Message.nextId.toString();

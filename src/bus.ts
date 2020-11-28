@@ -68,6 +68,8 @@ class MessageBus {
 enum MessageType {
     Push = 'Push',
     Pull = 'Pull',
+    UpdatePush = 'UpdatePush',
+    UpdatePull = 'UpdatePull',
 }
 
 class Message {
@@ -77,7 +79,7 @@ class Message {
     type: MessageType;
     sender: number;
     epidemic: boolean;
-    quarters: Direction[];
+    parts: Part[];
     
     gossipers: number[];
     hops: number;
@@ -88,7 +90,7 @@ class Message {
         this.type = type;
         this.sender = sender;
         this.epidemic = false;
-        this.quarters = [];
+        this.parts = [];
         //this.gossipers = [];
         //this.gossipers.push(gossiper);
         //this.epidemic = broadcast;

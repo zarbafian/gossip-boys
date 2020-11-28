@@ -11,8 +11,25 @@ function toLinkId(id1: number, id2: number): string {
     return id1 + "-" + id2;
 }
 
-enum Direction {
-    North, East, South, West
+enum Part {
+    P0, P1, P2, P3, P4, P5, P6, P7
+}
+const PATHS = [
+    "M0 0 0-7A7 7 0 0 1 5-5Z", 
+    "M0 0 5-5A7 7 0 0 1 7 0Z", 
+    "M0 0 7 0A7 7 0 0 1 5 5Z", 
+    "M0 0 5 5A7 7 0 0 1 0 7Z", 
+    "M0 0 0 7A7 7 0 0 1-5 5Z", 
+    "M0 0-5 5A7 7 0 0 1-7 0Z", 
+    "M0 0-7 0A7 7 0 0 1-5-5Z", 
+    "M0 0-5-5A7 7 0 0 1 0-7Z"
+];
+
+function testStartData() {
+    let pid = simulation.onlinePeers[getRandomInt(simulation.onlinePeers.length)].id;
+    console.log(`selected random peer ${pid} to notify part ${svgManager.nextPart}`);
+    simulation.peerMap[pid].onDataPart(svgManager.nextPart);
+    svgManager.nextPart = (svgManager.nextPart + 1) % 8;
 }
 
 class SvgManager {
@@ -27,7 +44,7 @@ class SvgManager {
     fromElement: SVGGraphicsElement = null;
     toElement: SVGGraphicsElement = null;
 
-    nextQuarter: number = 0;
+    nextPart: number = 0;
 
     constructor(id: string, width: number, height: number) {
         this.id = id;
@@ -48,13 +65,7 @@ class SvgManager {
         this.point = svg.createSVGPoint();
 
         let leftClickHandler = (event: any) => {
-            if(event.button == MouseButton.Left && event.altKey) {
-                console.log(`notify quarter ${this.nextQuarter}`);
-                let pid = this.parseProcessId(event.target.id);
-                simulation.peerMap[pid].onQuarter(this.nextQuarter);
-                this.nextQuarter = (this.nextQuarter + 1) % 4;
-            }
-            else if(event.button == MouseButton.Left) {
+            if(event.button == MouseButton.Left) {
                 let pid = this.parseProcessId(event.target.id);
                 //console.log(`left clicked: pid=${pid}`);
                 simulation.toggleProcess(pid);
@@ -189,46 +200,21 @@ class SvgManager {
         return circle;
     }
 
-
-    /**
-           North             <path d="M0 0-5-5A7 7 0 0 1 5-5Z" fill="#04e"/>
-           East              <path d="M0 0 5-5A7 7 0 0 1 5 5Z" fill="#f00"/>
-           South             <path d="M0 0 5 5A7 7 0 0 1-5 5Z" fill="#04e"/>
-           West              <path d="M0 0-5 5A7 7 0 0 1-5-5Z" fill="#f00"/>
-     */
-    addQuarter(pid: number, direction: Direction) {
-        let d;
-        let fill;
-        switch(direction) {
-            case Direction.North:
-                d = "M0 0-5-5A7 7 0 0 1 5-5Z";
-                fill = "#04e";
-                break;
-            case Direction.East:
-                d = "M0 0 5-5A7 7 0 0 1 5 5Z";
-                fill = "#f00";
-                break;
-            case Direction.South:
-                d = "M0 0 5 5A7 7 0 0 1-5 5Z";
-                fill = "#04e";
-                break;
-            case Direction.West:
-                d = "M0 0-5 5A7 7 0 0 1-5-5Z";
-                fill = "#f00";
-                break;
-        }
-        let quarter = document.createElementNS(SVG_NS, "path");
-        quarter.setAttributeNS(null, "id", "quarter" + direction + "_" + pid);
-        quarter.setAttributeNS(null, "d", d);
-        quarter.setAttributeNS(null, "fill", fill);
-        document.getElementById("g_" + pid).appendChild(quarter);
+    addDataPart(pid: number, part: Part) {
+        let d = PATHS[part];
+        let fill = Color.ProcessInfected;
+        let circlePart = document.createElementNS(SVG_NS, "path");
+        circlePart.setAttributeNS(null, "id", "part" + part + "_" + pid);
+        circlePart.setAttributeNS(null, "d", d);
+        circlePart.setAttributeNS(null, "fill", fill);
+        document.getElementById("g_" + pid).appendChild(circlePart);
     }
 
-    clearQuarters(pid: number) {
-        for(let i=0; i<4; i++) {
-            let quarter = document.getElementById("quarter" + i + "_" + pid);
-            if(quarter != null) {
-                document.getElementById("g_" + pid).removeChild(quarter);
+    clearDataParts(pid: number) {
+        for(let i=0; i<8; i++) {
+            let partElement = document.getElementById("part" + i + "_" + pid);
+            if(partElement != null) {
+                document.getElementById("g_" + pid).removeChild(partElement);
             }
         }
     }

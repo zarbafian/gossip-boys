@@ -8,7 +8,8 @@ var PeerStatus;
 class Peer {
     constructor(id, position) {
         this.running = false;
-        this.stopped = true;
+        this.stoppedSamplingLoop = true;
+        this.stoppedUpdateLoop = true;
         this.id = id;
         this.position = position;
         this.status = PeerStatus.Offline;
@@ -16,7 +17,7 @@ class Peer {
         this.topics.push(this.id.toString());
         this.view = new PeerSamplingService();
         this.links = [];
-        this.quarters = [];
+        this.parts = [];
     }
     init() {
         this.topics.forEach(topic => MessageBus.getInstance().subscribe(this, topic));
@@ -25,7 +26,7 @@ class Peer {
     }
     drop() {
         this.topics.forEach(topic => MessageBus.getInstance().unsubscribe(this, topic));
-        this.clearQuarters();
+        this.clearParts();
         this.removeAllLinks();
     }
     refreshLinks() {
@@ -69,54 +70,84 @@ class Peer {
                     this.view.moveOldestToEnd();
                     Array.prototype.push.apply(buffer, this.view.getHead());
                     let resp = Message.new(MessageType.Pull, this.id);
-                    resp.quarters = this.quarters.slice(0);
                     resp.payload = buffer;
                     network.send(this, [simulation.peerMap[message.sender]], resp);
                 }
                 this.view.select(message.payload);
                 this.view.increaseAge();
-                for (let quarter of message.quarters) {
-                    this.onQuarter(quarter);
-                }
                 this.refreshLinks();
                 break;
             case MessageType.Pull:
                 if (simulation.pull) {
                     this.view.select(message.payload);
                     this.refreshLinks();
-                    for (let quarter of message.quarters) {
-                        this.onQuarter(quarter);
-                    }
                 }
                 this.view.increaseAge();
+                break;
+            case MessageType.UpdatePush:
+                if (simulation.pull) {
+                    let resp = Message.new(MessageType.UpdatePull, this.id);
+                    resp.parts = this.parts.slice(0);
+                    network.send(this, [simulation.peerMap[message.sender]], resp);
+                }
+                for (let part of message.parts) {
+                    this.onDataPart(part);
+                }
+                break;
+            case MessageType.UpdatePull:
+                if (simulation.pull) {
+                    for (let part of message.parts) {
+                        this.onDataPart(part);
+                    }
+                }
                 break;
             default:
                 console.error(`unhandled message type : ${message.type}`);
                 break;
         }
     }
-    onQuarter(direction) {
-        if (!this.quarters.includes(direction)) {
-            this.quarters.push(direction);
-            svgManager.addQuarter(this.id, direction);
+    onDataPart(part) {
+        if (!this.parts.includes(part)) {
+            this.parts.push(part);
+            svgManager.addDataPart(this.id, part);
         }
     }
-    clearQuarters() {
-        this.quarters.splice(0);
-        svgManager.clearQuarters(this.id);
+    clearParts() {
+        this.parts.splice(0);
+        svgManager.clearDataParts(this.id);
     }
     async start() {
         this.init();
         this.setStatus(PeerStatus.Online);
         this.running = true;
-        this.stopped = false;
+        this.peerSamplingLoop();
+        this.stoppedSamplingLoop = false;
+        this.updateLoop();
+        this.stoppedUpdateLoop = false;
+    }
+    async peerSamplingLoop() {
         while (this.running) {
             await sleep(simulation.T + getRandomInt(simulation.T) / 2);
-            await this.active();
+            await this.peerSamplingPeriod();
         }
-        this.stopped = true;
+        this.stoppedSamplingLoop = true;
     }
-    async active() {
+    async updateLoop() {
+        while (this.running) {
+            await sleep(500);
+            await this.updatePeriod();
+        }
+        this.stoppedUpdateLoop = true;
+    }
+    async updatePeriod() {
+        let pid = this.view.getPeer();
+        if (pid != null) {
+            let message = Message.new(MessageType.UpdatePush, this.id);
+            message.parts = this.parts.slice(0);
+            network.send(this, [simulation.peerMap[pid]], message);
+        }
+    }
+    async peerSamplingPeriod() {
         let peerData = this.view.selectPeer();
         if (peerData != null) {
             if (simulation.push) {
@@ -125,7 +156,6 @@ class Peer {
                 this.view.moveOldestToEnd();
                 Array.prototype.push.apply(buffer, this.view.getHead());
                 let message = Message.new(MessageType.Push, this.id);
-                message.quarters = this.quarters.slice(0);
                 message.payload = buffer;
                 network.send(this, [simulation.peerMap[peerData.id]], message);
             }
@@ -144,7 +174,7 @@ class Peer {
     }
     async stop() {
         this.running = false;
-        while (!this.stopped) {
+        while (!this.stoppedSamplingLoop && !this.stoppedUpdateLoop) {
             await sleep(100);
         }
         this.drop();

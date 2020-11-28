@@ -14,11 +14,12 @@ class Peer implements MessageBusSubscriber {
     view: PeerSamplingService;
 
     running: boolean = false;
-    stopped: boolean = true;
+    stoppedSamplingLoop: boolean = true;
+    stoppedUpdateLoop: boolean = true;
 
     links: Link[];
 
-    quarters: Direction[];
+    parts: Part[];
 
     constructor(id: number, position: Point) {
         this.id = id;
@@ -28,7 +29,7 @@ class Peer implements MessageBusSubscriber {
         this.topics.push(this.id.toString());
         this.view = new PeerSamplingService();
         this.links = [];
-        this.quarters = [];
+        this.parts = [];
     }
 
     private init() {
@@ -47,7 +48,7 @@ class Peer implements MessageBusSubscriber {
         this.topics.forEach(topic => MessageBus.getInstance().unsubscribe(this, topic));
 
         // clear data status
-        this.clearQuarters();
+        this.clearParts();
 
         // remove connections
         this.removeAllLinks();
@@ -93,7 +94,7 @@ class Peer implements MessageBusSubscriber {
     onMessage(message: Message): void {
         //console.log(`process ${this.id} received message: id=${message.id}, type=${message.type}, sender=${message.sender}`);
         /*
-        console.log(`${this.id}: received quarters -> ${message.quarters}`);
+        console.log(`${this.id}: received parts -> ${message.parts}`);
         if(message.payload) {
             let payload = (message.payload as PeerData[]).map(p => `( ${p.id}@${p.age} )`).join(', ');
             console.log(`payload -> ${payload}`);
@@ -110,29 +111,11 @@ class Peer implements MessageBusSubscriber {
                     Array.prototype.push.apply(buffer, this.view.getHead());
 
                     let resp = Message.new(MessageType.Pull, this.id);
-
-                    /*
-                    if(this.status == PeerStatus.Infected) {
-                        resp.epidemic = true;
-                    }
-                    */
-                    resp.quarters = this.quarters.slice(0);
-
                     resp.payload = buffer;
                     network.send(this, [ simulation.peerMap[message.sender]], resp);
                 }
                 this.view.select(message.payload);
                 this.view.increaseAge();
-
-                // handle update
-                /*
-                if(message.epidemic) {
-                    this.setStatus(PeerStatus.Infected);
-                }
-                */
-                for(let quarter of message.quarters) {
-                    this.onQuarter(quarter);
-                }
 
                 // update display
                 this.refreshLinks();
@@ -145,19 +128,27 @@ class Peer implements MessageBusSubscriber {
                         
                         // update display
                         this.refreshLinks()
-
-                        for(let quarter of message.quarters) {
-                            this.onQuarter(quarter);
-                        }
                     }
                     this.view.increaseAge();
 
-                    /*
-                    // handle update
-                    if(message.epidemic) {
-                        this.setStatus(PeerStatus.Infected);
+                break;
+            case MessageType.UpdatePush:
+                //console.log('handle update from ' + message.sender);
+                if(simulation.pull) {
+                    let resp = Message.new(MessageType.UpdatePull, this.id);
+                    resp.parts = this.parts.slice(0);
+                    network.send(this, [ simulation.peerMap[message.sender] ], resp);
+                }
+                for(let part of message.parts) {
+                    this.onDataPart(part);
+                }
+                break;
+            case MessageType.UpdatePull:
+                if(simulation.pull) {
+                    for(let part of message.parts) {
+                        this.onDataPart(part);
                     }
-                    */
+                }
                 break;
             default:
                 console.error(`unhandled message type : ${message.type}`);
@@ -165,31 +156,57 @@ class Peer implements MessageBusSubscriber {
         }
     }
 
-    onQuarter(direction: Direction) {
-        if(!this.quarters.includes(direction)) {
-            this.quarters.push(direction);
-            svgManager.addQuarter(this.id, direction);
+    onDataPart(part: Part) {
+        if(!this.parts.includes(part)) {
+            this.parts.push(part);
+            svgManager.addDataPart(this.id, part);
         }
     }
 
-    clearQuarters() {
-        this.quarters.splice(0);
-        svgManager.clearQuarters(this.id);
+    clearParts() {
+        this.parts.splice(0);
+        svgManager.clearDataParts(this.id);
     }
 
     async start() {
         this.init();
         this.setStatus(PeerStatus.Online);
         this.running = true;
-        this.stopped = false;
-        while(this.running) {
-            await sleep(simulation.T + getRandomInt(simulation.T) / 2);
-            await this.active();
-        }
-        this.stopped = true;
+        this.peerSamplingLoop();
+        this.stoppedSamplingLoop = false;
+        this.updateLoop();
+        this.stoppedUpdateLoop = false;
     }
 
-    async active() {
+    async peerSamplingLoop() {
+        while(this.running) {
+            await sleep(simulation.T + getRandomInt(simulation.T) / 2);
+            await this.peerSamplingPeriod();
+        }
+        this.stoppedSamplingLoop = true;
+    }
+
+    async updateLoop() {
+        while(this.running) {
+            await sleep(500);
+            await this.updatePeriod();
+        }
+        this.stoppedUpdateLoop = true;
+    }
+
+    async updatePeriod() {
+        // check for update
+        //if(this.parts.length > 0) {
+            let pid = this.view.getPeer();
+            if(pid != null) {
+                let message = Message.new(MessageType.UpdatePush, this.id);
+                message.parts = this.parts.slice(0);
+                network.send(this, [ simulation.peerMap[pid] ], message);
+            }
+        //}
+    }
+
+    async peerSamplingPeriod() {
         let peerData = this.view.selectPeer();
         if(peerData != null) {
             if(simulation.push) {
@@ -200,14 +217,6 @@ class Peer implements MessageBusSubscriber {
                 Array.prototype.push.apply(buffer, this.view.getHead());
     
                 let message = Message.new(MessageType.Push, this.id);
-
-                /*
-                if(this.status == PeerStatus.Infected) {
-                    message.epidemic = true;
-                }
-                */
-                message.quarters = this.quarters.slice(0);
-
                 message.payload = buffer;
                 network.send(this, [ simulation.peerMap[peerData.id]], message);
             }
@@ -229,7 +238,7 @@ class Peer implements MessageBusSubscriber {
 
     async stop() {
         this.running = false;
-        while(!this.stopped) {
+        while(!this.stoppedSamplingLoop && !this.stoppedUpdateLoop) {
             await sleep(100);
         }
         this.drop();

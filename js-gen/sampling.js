@@ -8,11 +8,29 @@ class PeerSamplingService {
     init(id) {
         this.id = id;
         this.peers = [];
+        this.peerQueue = [];
         for (let pid of DnsService.getInstance().getInitialPeers()) {
             if (this.id !== pid) {
                 this.peers.push(new PeerData(pid, 0));
             }
         }
+    }
+    updateQueue() {
+        let newPeers = this.peers.map(peer => peer.id);
+        let toDelete = this.peerQueue.filter(pid => !newPeers.includes(pid));
+        let toAdd = newPeers.filter(pid => !this.peerQueue.includes(pid));
+        toDelete.forEach(pid => this.peerQueue.splice(this.peerQueue.indexOf(pid), 1));
+        toAdd.forEach(pid => this.peerQueue.push(pid));
+    }
+    getPeer() {
+        if (this.peerQueue.length == 0) {
+            let fallback = this.selectPeer();
+            if (fallback != null) {
+                return fallback.id;
+            }
+            return null;
+        }
+        return this.peerQueue.splice(0, 1)[0];
     }
     selectPeer() {
         if (this.peers.length > 0) {
@@ -76,6 +94,7 @@ class PeerSamplingService {
             let removalIndex = getRandomInt(this.peers.length);
             this.peers.splice(removalIndex, 1);
         }
+        this.updateQueue();
     }
     increaseAge() {
         this.peers.forEach(peer => peer.age++);

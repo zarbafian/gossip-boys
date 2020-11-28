@@ -11,16 +11,36 @@ class PeerSamplingService {
 
     id: number;
     peers: PeerData[];
-    //private peers: { [pid: string]: PeerData };
+    peerQueue: number[];
     
     init(id: number) {
         this.id = id;
         this.peers = [];
+        this.peerQueue = [];
         for(let pid of DnsService.getInstance().getInitialPeers()) {
             if(this.id !== pid) {
                 this.peers.push(new PeerData(pid, 0));
             }
         }
+    }
+
+    updateQueue() {
+        let newPeers = this.peers.map(peer => peer.id);
+        let toDelete = this.peerQueue.filter(pid => !newPeers.includes(pid));
+        let toAdd = newPeers.filter(pid => !this.peerQueue.includes(pid));
+        toDelete.forEach(pid => this.peerQueue.splice(this.peerQueue.indexOf(pid), 1));
+        toAdd.forEach(pid => this.peerQueue.push(pid));
+    }
+
+    getPeer(): number {
+        if(this.peerQueue.length == 0) {
+            let fallback = this.selectPeer();
+            if(fallback != null) {
+                return fallback.id;
+            }
+            return null;
+        }
+        return this.peerQueue.splice(0, 1)[0];
     }
 
     selectPeer(): PeerData {
@@ -113,6 +133,7 @@ class PeerSamplingService {
             this.peers.splice(removalIndex, 1);
         }
 
+        this.updateQueue();
         //let newPeerData = this.getPeers().map(p => `( ${p.id}@${p.age} )`).join(', ');
         //console.log(`[${this.id}] newPeerData=${newPeerData}`);
     }
