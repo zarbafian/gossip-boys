@@ -16,6 +16,7 @@ class Peer {
         this.topics.push(this.id.toString());
         this.view = new PeerSamplingService();
         this.links = [];
+        this.quarters = [];
     }
     init() {
         this.topics.forEach(topic => MessageBus.getInstance().subscribe(this, topic));
@@ -24,10 +25,11 @@ class Peer {
     }
     drop() {
         this.topics.forEach(topic => MessageBus.getInstance().unsubscribe(this, topic));
+        this.clearQuarters();
         this.removeAllLinks();
     }
     refreshLinks() {
-        if (simulation.displayMessages) {
+        if (simulation.displayLinks) {
             let actualLinks = this.view.getPeers().map(peer => peer.id);
             let legacyLinks = this.links.map(link => link.to);
             let shouldBeAdded = actualLinks.filter(pid => !legacyLinks.includes(pid));
@@ -67,16 +69,14 @@ class Peer {
                     this.view.moveOldestToEnd();
                     Array.prototype.push.apply(buffer, this.view.getHead());
                     let resp = Message.new(MessageType.Pull, this.id);
-                    if (this.status == PeerStatus.Infected) {
-                        resp.epidemic = true;
-                    }
+                    resp.quarters = this.quarters.slice(0);
                     resp.payload = buffer;
                     network.send(this, [simulation.peerMap[message.sender]], resp);
                 }
                 this.view.select(message.payload);
                 this.view.increaseAge();
-                if (message.epidemic) {
-                    this.setStatus(PeerStatus.Infected);
+                for (let quarter of message.quarters) {
+                    this.onQuarter(quarter);
                 }
                 this.refreshLinks();
                 break;
@@ -84,16 +84,26 @@ class Peer {
                 if (simulation.pull) {
                     this.view.select(message.payload);
                     this.refreshLinks();
+                    for (let quarter of message.quarters) {
+                        this.onQuarter(quarter);
+                    }
                 }
                 this.view.increaseAge();
-                if (message.epidemic) {
-                    this.setStatus(PeerStatus.Infected);
-                }
                 break;
             default:
                 console.error(`unhandled message type : ${message.type}`);
                 break;
         }
+    }
+    onQuarter(direction) {
+        if (!this.quarters.includes(direction)) {
+            this.quarters.push(direction);
+            svgManager.addQuarter(this.id, direction);
+        }
+    }
+    clearQuarters() {
+        this.quarters.splice(0);
+        svgManager.clearQuarters(this.id);
     }
     async start() {
         this.init();
@@ -115,9 +125,7 @@ class Peer {
                 this.view.moveOldestToEnd();
                 Array.prototype.push.apply(buffer, this.view.getHead());
                 let message = Message.new(MessageType.Push, this.id);
-                if (this.status == PeerStatus.Infected) {
-                    message.epidemic = true;
-                }
+                message.quarters = this.quarters.slice(0);
                 message.payload = buffer;
                 network.send(this, [simulation.peerMap[peerData.id]], message);
             }

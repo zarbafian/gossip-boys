@@ -77,7 +77,7 @@ class Message {
     type: MessageType;
     sender: number;
     epidemic: boolean;
-
+    quarters: Direction[];
     
     gossipers: number[];
     hops: number;
@@ -88,6 +88,7 @@ class Message {
         this.type = type;
         this.sender = sender;
         this.epidemic = false;
+        this.quarters = [];
         //this.gossipers = [];
         //this.gossipers.push(gossiper);
         //this.epidemic = broadcast;

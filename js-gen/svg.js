@@ -7,10 +7,18 @@ function getAnimationDuration(distance) {
 function toLinkId(id1, id2) {
     return id1 + "-" + id2;
 }
+var Direction;
+(function (Direction) {
+    Direction[Direction["North"] = 0] = "North";
+    Direction[Direction["East"] = 1] = "East";
+    Direction[Direction["South"] = 2] = "South";
+    Direction[Direction["West"] = 3] = "West";
+})(Direction || (Direction = {}));
 class SvgManager {
     constructor(id, width, height) {
         this.fromElement = null;
         this.toElement = null;
+        this.nextQuarter = 0;
         this.id = id;
         this.width = width;
         this.height = height;
@@ -24,7 +32,13 @@ class SvgManager {
         svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
         this.point = svg.createSVGPoint();
         let leftClickHandler = (event) => {
-            if (event.button == MouseButton.Left) {
+            if (event.button == MouseButton.Left && event.altKey) {
+                console.log(`notify quarter ${this.nextQuarter}`);
+                let pid = this.parseProcessId(event.target.id);
+                simulation.peerMap[pid].onQuarter(this.nextQuarter);
+                this.nextQuarter = (this.nextQuarter + 1) % 4;
+            }
+            else if (event.button == MouseButton.Left) {
                 let pid = this.parseProcessId(event.target.id);
                 simulation.toggleProcess(pid);
             }
@@ -114,6 +128,41 @@ class SvgManager {
         circle.setAttributeNS(null, "opacity", "0.7");
         document.getElementById(this.id).appendChild(circle);
         return circle;
+    }
+    addQuarter(pid, direction) {
+        let d;
+        let fill;
+        switch (direction) {
+            case Direction.North:
+                d = "M0 0-5-5A7 7 0 0 1 5-5Z";
+                fill = "#04e";
+                break;
+            case Direction.East:
+                d = "M0 0 5-5A7 7 0 0 1 5 5Z";
+                fill = "#f00";
+                break;
+            case Direction.South:
+                d = "M0 0 5 5A7 7 0 0 1-5 5Z";
+                fill = "#04e";
+                break;
+            case Direction.West:
+                d = "M0 0-5 5A7 7 0 0 1-5-5Z";
+                fill = "#f00";
+                break;
+        }
+        let quarter = document.createElementNS(SVG_NS, "path");
+        quarter.setAttributeNS(null, "id", "quarter" + direction + "_" + pid);
+        quarter.setAttributeNS(null, "d", d);
+        quarter.setAttributeNS(null, "fill", fill);
+        document.getElementById("g_" + pid).appendChild(quarter);
+    }
+    clearQuarters(pid) {
+        for (let i = 0; i < 4; i++) {
+            let quarter = document.getElementById("quarter" + i + "_" + pid);
+            if (quarter != null) {
+                document.getElementById("g_" + pid).removeChild(quarter);
+            }
+        }
     }
     setSourceProcess(pid) {
         let circle = document.createElementNS(SVG_NS, "circle");
