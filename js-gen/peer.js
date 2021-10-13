@@ -106,10 +106,10 @@ class Peer {
                 break;
         }
     }
-    onDataPart(part) {
-        if (!this.parts.includes(part)) {
-            this.parts.push(part);
-            svgManager.addDataPart(this.id, part);
+    onDataPart(partIndex) {
+        if (!this.parts.includes(partIndex)) {
+            this.parts.push(partIndex);
+            svgManager.addDataPart(this.id, partIndex);
         }
     }
     clearParts() {

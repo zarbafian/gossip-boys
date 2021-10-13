@@ -19,7 +19,7 @@ class Peer implements MessageBusSubscriber {
 
     links: Link[];
 
-    parts: Part[];
+    parts: PartIndex[];
 
     constructor(id: number, position: Point) {
         this.id = id;
@@ -156,10 +156,10 @@ class Peer implements MessageBusSubscriber {
         }
     }
 
-    onDataPart(part: Part) {
-        if(!this.parts.includes(part)) {
-            this.parts.push(part);
-            svgManager.addDataPart(this.id, part);
+    onDataPart(partIndex: PartIndex) {
+        if(!this.parts.includes(partIndex)) {
+            this.parts.push(partIndex);
+            svgManager.addDataPart(this.id, partIndex);
         }
     }
 

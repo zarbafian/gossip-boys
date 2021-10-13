@@ -79,7 +79,7 @@ class Message {
     type: MessageType;
     sender: number;
     epidemic: boolean;
-    parts: Part[];
+    parts: PartIndex[];
     
     gossipers: number[];
     hops: number;

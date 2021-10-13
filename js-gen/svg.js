@@ -7,17 +7,27 @@ function getAnimationDuration(distance) {
 function toLinkId(id1, id2) {
     return id1 + "-" + id2;
 }
-var Part;
-(function (Part) {
-    Part[Part["P0"] = 0] = "P0";
-    Part[Part["P1"] = 1] = "P1";
-    Part[Part["P2"] = 2] = "P2";
-    Part[Part["P3"] = 3] = "P3";
-    Part[Part["P4"] = 4] = "P4";
-    Part[Part["P5"] = 5] = "P5";
-    Part[Part["P6"] = 6] = "P6";
-    Part[Part["P7"] = 7] = "P7";
-})(Part || (Part = {}));
+var part_colors = [
+    "#000000",
+    "#DF5B3E",
+    "#068A4B",
+    "#80188F",
+    "#D47A11",
+    "#679BE2",
+    "#D411A6",
+    "#26AC17",
+];
+var PartIndex;
+(function (PartIndex) {
+    PartIndex[PartIndex["P0"] = 0] = "P0";
+    PartIndex[PartIndex["P1"] = 1] = "P1";
+    PartIndex[PartIndex["P2"] = 2] = "P2";
+    PartIndex[PartIndex["P3"] = 3] = "P3";
+    PartIndex[PartIndex["P4"] = 4] = "P4";
+    PartIndex[PartIndex["P5"] = 5] = "P5";
+    PartIndex[PartIndex["P6"] = 6] = "P6";
+    PartIndex[PartIndex["P7"] = 7] = "P7";
+})(PartIndex || (PartIndex = {}));
 const PATHS = [
     "M0 0 0-7A7 7 0 0 1 5-5Z",
     "M0 0 5-5A7 7 0 0 1 7 0Z",
@@ -29,6 +39,10 @@ const PATHS = [
     "M0 0-5-5A7 7 0 0 1 0-7Z"
 ];
 function testStartData() {
+    if (!simulation.running) {
+        window.alert("You must start a simulation first.");
+        return;
+    }
     let pid = simulation.onlinePeers[getRandomInt(simulation.onlinePeers.length)].id;
     console.log(`selected random peer ${pid} to notify part ${svgManager.nextPart}`);
     simulation.peerMap[pid].onDataPart(svgManager.nextPart);
@@ -143,13 +157,13 @@ class SvgManager {
         document.getElementById(this.id).appendChild(circle);
         return circle;
     }
-    addDataPart(pid, part) {
-        let d = PATHS[part];
+    addDataPart(pid, parseIndex) {
+        let d = PATHS[parseIndex];
         let fill = Color.ProcessInfected;
         let circlePart = document.createElementNS(SVG_NS, "path");
-        circlePart.setAttributeNS(null, "id", "part" + part + "_" + pid);
+        circlePart.setAttributeNS(null, "id", "part" + parseIndex + "_" + pid);
         circlePart.setAttributeNS(null, "d", d);
-        circlePart.setAttributeNS(null, "fill", fill);
+        circlePart.setAttributeNS(null, "fill", part_colors[parseIndex]);
         document.getElementById("g_" + pid).appendChild(circlePart);
     }
     clearDataParts(pid) {

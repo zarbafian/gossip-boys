@@ -11,8 +11,27 @@ function toLinkId(id1: number, id2: number): string {
     return id1 + "-" + id2;
 }
 
-enum Part {
-    P0, P1, P2, P3, P4, P5, P6, P7
+var part_colors= [
+    "#000000", 
+    "#DF5B3E", 
+    "#068A4B", 
+    "#80188F",
+    "#D47A11", 
+    "#679BE2", 
+    "#D411A6", 
+    "#26AC17",
+];
+
+
+enum PartIndex {
+    P0, 
+    P1, 
+    P2, 
+    P3,
+    P4, 
+    P5, 
+    P6, 
+    P7,
 }
 const PATHS = [
     "M0 0 0-7A7 7 0 0 1 5-5Z", 
@@ -26,6 +45,10 @@ const PATHS = [
 ];
 
 function testStartData() {
+    if (!simulation.running) {
+        window.alert("You must start a simulation first.");
+        return;
+    }
     let pid = simulation.onlinePeers[getRandomInt(simulation.onlinePeers.length)].id;
     console.log(`selected random peer ${pid} to notify part ${svgManager.nextPart}`);
     simulation.peerMap[pid].onDataPart(svgManager.nextPart);
@@ -200,13 +223,13 @@ class SvgManager {
         return circle;
     }
 
-    addDataPart(pid: number, part: Part) {
-        let d = PATHS[part];
+    addDataPart(pid: number, parseIndex: PartIndex) {
+        let d = PATHS[parseIndex];
         let fill = Color.ProcessInfected;
         let circlePart = document.createElementNS(SVG_NS, "path");
-        circlePart.setAttributeNS(null, "id", "part" + part + "_" + pid);
+        circlePart.setAttributeNS(null, "id", "part" + parseIndex + "_" + pid);
         circlePart.setAttributeNS(null, "d", d);
-        circlePart.setAttributeNS(null, "fill", fill);
+        circlePart.setAttributeNS(null, "fill", part_colors[parseIndex]);
         document.getElementById("g_" + pid).appendChild(circlePart);
     }
 
